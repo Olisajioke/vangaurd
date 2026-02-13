@@ -1,0 +1,94 @@
+<%- include("partials/header")  %>
+
+<div class="container mt-4">
+  <h2 class="mb-3">WELCOME TO THE MINI MARKET</h2>
+
+  <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createItemModal">
+    + Post Item
+  </button>
+
+  <% if (!items || items.length === 0) { %>
+    <p>No Item available for sale. Create one</p>
+  <% } %>
+
+  <div class="row">
+    <% items.forEach(item => { %>
+      <div class="col-12 mb-3">
+        <div class="card shadow-sm">
+          <div class="row g-0">
+
+            <!-- LEFT: IMAGE CAROUSEL -->
+            <div class="col-md-4">
+              <% if (item.images && item.images.length > 0) { %>
+                <div id="carousel-<%= item.id %>" class="carousel slide h-100">
+                  <div class="carousel-inner h-100">
+
+                    <% item.images.forEach((img, index) => { %>
+                      <div class="carousel-item <%= index === 0 ? 'active' : '' %> h-100">
+                        <img src="/uploads/<%= img %>"
+                             class="d-block w-100 h-100"
+                             style="object-fit: cover;">
+                      </div>
+                    <% }) %>
+
+                  </div>
+
+                  <% if (item.images.length > 1) { %>
+                    <button class="carousel-control-prev" type="button"
+                            data-bs-target="#carousel-<%= item.id %>" data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon"></span>
+                    </button>
+
+                    <button class="carousel-control-next" type="button"
+                            data-bs-target="#carousel-<%= item.id %>" data-bs-slide="next">
+                      <span class="carousel-control-next-icon"></span>
+                    </button>
+                  <% } %>
+                </div>
+              <% } else { %>
+                <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                  <span class="text-muted">No Image</span>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- RIGHT: DETAILS -->
+            <div class="col-md-8">
+              <div class="card-body">
+                <h4 class="card-title"><%= item.title %> For Sale</h4>
+
+                <p class="mb-1"><strong>Price:</strong> ر.س <%= item.price %></p>
+                <p class="mb-1"><strong>Seller:</strong> <%= item.seller %></p>
+                <p class="mb-1"><strong>Contact:</strong> <%= item.contact %></p>
+                <p class="mb-2"><%= item.description %></p>
+
+                <a href="/item/<%= item.id %>" class="btn btn-outline-secondary btn-sm">View</a>
+
+
+                <button class="btn btn-primary btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editItemModal-<%= item.id %>">
+                  Edit
+                </button>
+
+                <button class="btn btn-danger btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteItemModal-<%= item.id %>">
+                  Delete
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <%- include("partials/editItemModal", { item }) %>
+      <%- include("partials/deleteItemModal", { item }) %>
+
+    <% }) %>
+  </div>
+</div>
+
+<%- include("partials/createItemModal") %>
+<%- include("partials/footer") %>

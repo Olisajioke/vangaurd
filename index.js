@@ -4,6 +4,10 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import flash from "connect-flash";
 import multer from "multer";
+import methodOverride from "method-override"
+import path from "path"
+
+
 
 
 
@@ -12,12 +16,25 @@ const port = 3000;
 
 
 
-const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/uploads")
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + "-" + file.originalname
+    cb(null, unique)
+  }
+})
+
+const upload = multer({ storage })
+
+
 const db = {
   users: [],
   posts: []
 };
 
+const items = [];
 
 // Session middleware (required for flash)
 app.use(session({
@@ -39,16 +56,22 @@ app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
+app.use(methodOverride("_method"))
 
 
 
 const user_db = [];
+let jobs = []
+
 
 
 app.get("/", (req, res) => {
   res.render("index")
 })
 
+
+
+///ARTICLES ROUTES
 
 app.get("/articles", (req, res) => {
     db.posts.sort((a, b) => b.id - a.id);
@@ -243,6 +266,154 @@ app.post("/posts/:postId/comments/:commentId/delete", (req, res) => {
   req.flash('success_msg', 'Comment deleted successfully');
   res.redirect("/view_posts/" + postId);
 });
+
+
+
+                  /// JOBS
+
+// route to display jobs
+app.get("/showjobs", (req, res) => {
+  res.render("showjobs", {jobs: jobs})
+})
+
+
+// route to create job
+app.post("/createJobs", (req, res) => {
+  const { title, clinic, location, salary, contact, description } = req.body
+
+  const newJob = {
+    id: Date.now().toString(),
+    title,
+    clinic,
+    location,
+    salary,
+    contact,
+    description,
+    createdAt: new Date()
+  }
+
+  jobs.push(newJob)
+
+  res.redirect("/showjobs")
+})
+
+//EDIT JOBS
+app.put("/editjob/:id", (req, res) => {
+  const { id } = req.params;
+
+  const job = jobs.find(j => j.id === id);
+  if (!job) return res.status(404).send("Job not found");
+
+  const { title, clinic, location, salary, contact, description } = req.body;
+
+  job.title = title;
+  job.clinic = clinic;
+  job.location = location;
+  job.salary = salary;
+  job.contact = contact;
+  job.description = description;
+
+  res.redirect("/showjobs")
+})
+
+
+//delete jobs
+
+app.delete('/deletejob/:id', (req, res) => {
+  const { id } = req.params
+
+  const index = jobs.findIndex(j => j.id === id)
+
+  if (index === -1) {
+    return res.status(404).send("Job not found")
+  }
+
+  jobs.splice(index, 1)
+
+  res.redirect("/showjobs")
+})
+
+
+
+
+              /// MARKET PLACE
+
+// show all items for sale
+app.get("/market", (req, res) => {
+  res.render("market", { items })
+})
+
+// get a single item
+app.get("/item/:id", (req, res) => {
+  const { id } = req.params
+  const item = items.find(i => i.id === id)
+
+  if (!item) return res.status(404).send("Item not found")
+
+  res.render("item", { item })
+})
+
+
+// create item for sale
+app.post("/createitem", upload.array("images", 3), (req, res) => {
+  const { title, price, description, location, seller, contact } = req.body
+  const imageFiles = req.files.map(f => f.filename);
+
+  const newItem = {
+    id: Date.now().toString(),
+    title,
+    price,
+    description,
+    seller,
+    location,
+    contact,
+    images: imageFiles,
+    createdAt: new Date()
+  }
+
+  items.push(newItem)
+
+  res.redirect("/market")
+})
+
+
+// edit Items
+app.put("/edititem/:id", upload.array("images", 3), (req, res) => {
+  const { id } = req.params
+  const item = items.find(i => i.id === id)
+
+  if (!item) return res.status(404).send("Item not found")
+
+  const { title, price, description, seller, contact, location } = req.body
+
+  item.title = title
+  item.price = price
+  item.description = description
+  item.seller = seller
+  item.contact = contact
+  item.location = location
+
+  // if new images uploaded → replace
+  if (req.files && req.files.length > 0) {
+    item.images = req.files.map(f => f.filename)
+  }
+
+  res.redirect("/market")
+})
+
+
+// delete item
+
+app.delete("/deleteitem/:id", (req, res) => {
+  const { id } = req.params
+  const index = items.findIndex(i => i.id === id)
+
+  if (index === -1) return res.status(404).send("Item not found")
+
+  items.splice(index, 1)
+
+  res.redirect("/market")
+})
 
 
 app.listen(port, () => {

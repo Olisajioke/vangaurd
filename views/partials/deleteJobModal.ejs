@@ -1,0 +1,28 @@
+<div class="modal fade" id="deleteJobModal-<%= job.id %>">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Job</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        Are you sure you want to delete
+        <strong><%= job.title %></strong> at
+        <strong><%= job.clinic %></strong>?
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <form action="/deletejob/<%= job.id %>?_method=DELETE" method="POST">
+          <button class="btn btn-danger">
+            Yes, Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

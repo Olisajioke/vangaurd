@@ -1,0 +1,32 @@
+
+<div class="modal fade" id="createItemModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/createitem" method="POST" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title">Post Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input name="title" class="form-control mb-2" placeholder="Item Name" required>
+          <input name="price" class="form-control mb-2" placeholder="Price">
+          <input name="location" class="form-control mb-2" placeholder="Location">
+          <input name="seller" class="form-control mb-2" placeholder="Seller's Name">
+          <input name="contact" class="form-control mb-2" placeholder="Contact">
+          <textarea name="description" class="form-control" placeholder="Description"></textarea>
+          <input type="file"
+                name="images"
+                class="form-control mb-2"
+                accept="image/*"
+                multiple>
+            <small class="text-muted">Upload up to 3 images</small>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-success">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

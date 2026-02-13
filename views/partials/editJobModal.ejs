@@ -1,0 +1,26 @@
+
+<div class="modal fade" id="editJobModal-<%= job.id %>">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/editjob/<%= job.id %>?_method=PUT" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Job</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input name="title" class="form-control mb-2" value="<%= job.title %>">
+          <input name="clinic" class="form-control mb-2" value="<%= job.clinic %>">
+          <input name="location" class="form-control mb-2" value="<%= job.location %>">
+          <input name="salary" class="form-control mb-2" value="<%= job.salary %>">
+          <input name="contact" class="form-control mb-2" value="<%= job.contact %>">
+          <textarea name="description" class="form-control"><%= job.description %></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-primary">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

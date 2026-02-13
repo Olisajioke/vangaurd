@@ -1,0 +1,59 @@
+<%- include("partials/header") %>
+
+<div class="container mt-4">
+
+  <div class="card shadow-lg">
+    <div class="card-body">
+
+      <!-- BIG IMAGE CAROUSEL -->
+      <% if (item.images && item.images.length > 0) { %>
+        <div id="itemCarousel-<%= item.id %>" class="carousel slide mb-4">
+          <div class="carousel-inner">
+
+            <% item.images.forEach((img, index) => { %>
+              <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                <img src="/uploads/<%= img %>"
+                     class="d-block w-100 rounded"
+                     style="max-height:500px;object-fit:contain;">
+              </div>
+            <% }) %>
+
+          </div>
+
+          <% if (item.images.length > 1) { %>
+            <button class="carousel-control-prev" type="button"
+                    data-bs-target="#itemCarousel-<%= item.id %>" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon"></span>
+            </button>
+
+            <button class="carousel-control-next" type="button"
+                    data-bs-target="#itemCarousel-<%= item.id %>" data-bs-slide="next">
+              <span class="carousel-control-next-icon"></span>
+            </button>
+          <% } %>
+        </div>
+      <% } %>
+
+      <!-- DETAILS -->
+      <h2 class="mb-3"><%= item.title %></h2>
+
+      <h4 class="text-success mb-3">ر.س <%= item.price %></h4>
+
+      <p><strong>Seller:</strong> <%= item.seller %></p>
+      <p><strong>Contact:</strong> <%= item.contact %></p>
+      <p><strong>Location:</strong> <%= item.location %></p>
+
+      <hr>
+
+      <p><%= item.description %></p>
+
+      <a href="/market" class="btn btn-outline-secondary mt-3">
+        ← Back to Market
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+<%- include("partials/footer") %>

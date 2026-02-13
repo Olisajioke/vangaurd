@@ -1,0 +1,50 @@
+<%- include("partials/header")  %>
+
+
+<div class="container mt-4">
+  <h2 class="mb-3">Job Vacancies</h2>
+
+  <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createJobModal">
+    + Post Job
+  </button>
+
+  <% if (jobs.length === 0) { %>
+    <p>No jobs available. Create one</p>
+  <% } %>
+
+  <div class="row">
+    <% jobs.forEach(job => { %>
+      <div class="col-md-6 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5><%= job.title %> Wanted</h5>
+            <p class="mb-1"><strong>Clinic:</strong> <%= job.clinic %></p>
+            <p class="mb-1"><strong>Location:</strong> <%= job.location %></p>
+            <p class="mb-1"><strong>Salary:</strong> <%= job.salary %></p>
+            <p class="mb-2"><%= job.description %></p>
+
+            <button class="btn btn-primary btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#editJobModal-<%= job.id %>">
+              Edit
+            </button>
+
+            <button class="btn btn-danger btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteJobModal-<%= job.id %>">
+                Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <%- include("partials/editJobModal", { job }) %>
+      <%- include("partials/deleteJobModal", { job }) %>
+
+    <% }) %>
+  </div>
+</div>
+
+<%- include("partials/createJobModal") %>
+
+<%- include("partials/footer") %>
