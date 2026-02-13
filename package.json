@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Olisajioke/blog-part#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
     "ckeditor4": "^4.25.1",
     "connect-flash": "^0.1.1",

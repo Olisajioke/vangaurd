@@ -1,0 +1,114 @@
+<%- include("partials/header") %>
+
+<style>
+.profile-hero {
+  background: linear-gradient(135deg, #0d6efd, #6610f2);
+  color: white;
+  padding: 40px 30px;
+  border-radius: 14px;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+
+.profile-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.saved-grid img {
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+</style>
+
+<div class="container mt-4">
+
+  <!-- HERO -->
+  <div class="profile-hero d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-4">
+      <% if (user.profilepic) { %>
+        <img src="/uploads/<%= user.profilepic %>" class="profile-avatar">
+      <% } else { %>
+        <div class="profile-avatar bg-light d-flex align-items-center justify-content-center text-dark">
+          <span class="fs-1">👤</span>
+        </div>
+      <% } %>
+
+      <div>
+        <h2 class="mb-1"><%= user.fullname %></h2>
+        <div class="opacity-75"><%= user.email %></div>
+      </div>
+    </div>
+
+    <div>
+      <button class="btn btn-light me-2"
+              data-bs-toggle="modal"
+              data-bs-target="#editUserModal-<%= user.id %>">
+        Edit Profile
+      </button>
+
+      <button class="btn btn-outline-light"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteUserModal-<%= user.id %>">
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- INFO CARD -->
+  <div class="card profile-card mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Profile Information</h5>
+      <p><strong>Name:</strong> <%= user.fullname %></p>
+      <p><strong>Email:</strong> <%= user.email %></p>
+      <p><strong>Location:</strong><%= user.location %></p>
+      <p><strong>Saved Items:</strong> <%= user.savedItems?.length || 0 %></p>
+    </div>
+  </div>
+
+  <!-- SAVED ITEMS -->
+  <h4 class="mb-3">Saved Items</h4>
+
+  <% if (!savedItems || savedItems.length === 0) { %>
+    <p class="text-muted">No saved items yet.</p>
+  <% } %>
+
+  <div class="row">
+    <% savedItems.forEach(item => { %>
+      <div class="col-md-4 mb-3">
+        <div class="card profile-card">
+          <% if (item.images && item.images.length > 0) { %>
+            <img src="/uploads/<%= item.images[0] %>" class="card-img-top">
+          <% } %>
+          <div class="card-body">
+            <h6><%= item.title %></h6>
+            <div class="text-success">ر.س <%= item.price %></div>
+            <a href="/item/<%= item.id %>" class="btn btn-outline-primary btn-sm mt-2">
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+    <button class="btn btn-outline-light"
+            data-bs-toggle="modal"
+            data-bs-target="#deleteUserModal-<%= user.id %>">
+            Delete
+    </button>
+
+
+</div>
+<%- include("partials/editUserModal", { user }) %>
+<%- include("partials/deleteUserModal", { user }) %>
+<%- include("partials/footer") %>

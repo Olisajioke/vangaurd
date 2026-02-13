@@ -1,0 +1,46 @@
+<div class="modal fade" id="deleteUserModal-<%= user.id %>">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Delete Account</h5>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+        <% if (user.profilepic) { %>
+          <img src="/uploads/<%= user.profilepic %>"
+               style="width:70px;height:70px;object-fit:cover;border-radius:50%;margin-bottom:10px;">
+        <% } %>
+
+        <p class="mb-2">
+          Are you sure you want to delete
+        </p>
+
+        <h5 class="text-danger"><%= user.fullname %></h5>
+
+        <small class="text-muted">
+          This action cannot be undone.
+        </small>
+      </div>
+
+      <div class="modal-footer justify-content-center">
+
+        <button class="btn btn-secondary"
+                data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <form action="/deleteuser/<%= user.id %>?_method=DELETE"
+              method="POST">
+          <button class="btn btn-danger">
+            Yes, Delete Account
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>

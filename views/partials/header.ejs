@@ -52,7 +52,7 @@
       <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
 
         <li class="nav-item">
-          <a class="nav-link active d-flex align-items-center gap-2" href="/jobs">
+          <a class="nav-link active d-flex align-items-center gap-2" href="/showjobs">
             <i class="fas fa-briefcase"></i>
             Jobs
           </a>
@@ -104,7 +104,20 @@
             Market
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2" href="/user", { id }>
+            <i class="fa-solid fa-user-doctor"></i>
+            Profile
+          </a>
+        </li>
+        <%
+          const currentUser = db?.users?.[0];
+          const savedCount = currentUser?.savedItems?.length || 0;
+        %>
 
+        <a href="/saved" class="nav-link">
+          ❤️ Saved (<%= savedCount %>)
+        </a>
       </ul>
 
       <!-- RIGHT SIDE -->

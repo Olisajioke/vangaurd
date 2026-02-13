@@ -5,17 +5,13 @@ import session from "express-session";
 import flash from "connect-flash";
 import multer from "multer";
 import methodOverride from "method-override"
+import bcrypt from "bcrypt";
 import path from "path"
 
 
-
-
-
+//CONSTANTS
 const app = express();
 const port = 3000;
-
-
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/uploads")
@@ -25,15 +21,17 @@ const storage = multer.diskStorage({
     cb(null, unique)
   }
 })
-
 const upload = multer({ storage })
 
+app.use((req, res, next) => {
+  res.locals.db = db;
+  next();
+});
 
 const db = {
   users: [],
   posts: []
 };
-
 const items = [];
 
 // Session middleware (required for flash)
@@ -66,7 +64,7 @@ let jobs = []
 
 
 app.get("/", (req, res) => {
-  res.render("index")
+  res.render("index", {db:db})
 })
 
 
@@ -165,24 +163,83 @@ app.get("/add_new_user", (req, res) => {
     res.render("add_new_user");
 });
 
-app.post("/add_new_user", upload.single("profilepic"), (req, res) => {
-	var fname = req.body.fName;
-	var lname = req.body.lName;
-	var fullname = fname + " " + lname;
-    var email = req.body.email;
-    var password = req.body.password;
-    var profilepic = req.file;
-    user_db.push({fullname: fullname,  email: email, password: password, profilepic: profilepic});
-    if (user_db.length > 0) {
-        console.log("New user added:", user_db[user_db.length - 1]);
-        console.log(user_db[user_db.length - 1].fullname);
-        req.flash('success', 'Your profile was created successfully!');
-    }
-    
-	res.render("index", { db: db, success_msg: "Your profile was created successfully!", content: ""});
+// route to save new user
+
+app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
+  const fname = req.body.fName;
+  const lname = req.body.lName;
+  const fullname = fname + " " + lname;
+  const email = req.body.email;
+  const password1 = req.body.password1;
+  const password2 = req.body.password2;
+  const location = req.body.location;
+  const profilepic = req.file ? req.file.filename : null;
+
+  // password match check
+  if (password1 !== password2) {
+    req.flash("error", "Passwords do not match");
+    return res.redirect("back");
+  }
+
+  // hash password
+  const hashedPassword = await bcrypt.hash(password1, 10);
+
+  user_db.push({
+    id: Date.now().toString(),
+    fullname,
+    email,
+    password: hashedPassword,
+    location,
+    profilepic,
+    savedItems: []
+  });
+
+  console.log("New user added:", user_db[user_db.length - 1]);
+
+  req.flash("success", "Your profile was created successfully!");
+  res.redirect("/"); 
 });
 
 
+app.get("/user/:id", (req, res) => {
+  const { id } = req.params
+  const user = user_db.find(u => u.id === id)
+
+  if (!user) return res.status(404).send("User not found")
+
+  const savedItems = items.filter(i => user.savedItems?.includes(i.id))
+
+  res.render("user", { user, savedItems })
+})
+
+
+
+// EDIT USER
+app.put("/edituser/:id", upload.single("profilepic"), (req, res) => {
+  const { id } = req.params
+  const user = user_db.find(u => u.id === id)
+
+  if (!user) return res.status(404).send("User not found")
+
+  const { fName, lName, email, location, password } = req.body
+
+  user.fullname = fName + " " + lName
+  user.email = email
+  user.location = location
+
+  if (password && password.trim() !== "") {
+    user.password = password
+  }
+
+  if (req.file) {
+    user.profilepic = req.file.filename
+  }
+
+  res.redirect("/user/" + id)
+})
+
+
+// add comments
 app.post("/posts/:id/comments", (req, res) => {
   const postId = parseInt(req.params.id);
   const post = db.posts.find(p => p.id === postId);
@@ -204,6 +261,23 @@ app.post("/posts/:id/comments", (req, res) => {
   res.redirect('/view_posts/' + num);
 
 });
+
+
+// DELETE USER
+app.delete("/deleteuser/:id", (req, res) => {
+  const { id } = req.params
+
+  const index = user_db.findIndex(u => u.id === id)
+
+  if (index === -1) {
+    return res.status(404).send("User not found")
+  }
+
+  user_db.splice(index, 1)
+
+  res.redirect("/")
+})
+
 
 // Edit comments page route
 app.get("/posts/:id/edit_comments", (req, res) => {
@@ -334,8 +408,6 @@ app.delete('/deletejob/:id', (req, res) => {
 })
 
 
-
-
               /// MARKET PLACE
 
 // show all items for sale
@@ -357,7 +429,10 @@ app.get("/item/:id", (req, res) => {
 // create item for sale
 app.post("/createitem", upload.array("images", 3), (req, res) => {
   const { title, price, description, location, seller, contact } = req.body
-  const imageFiles = req.files.map(f => f.filename);
+
+  const imageFiles = req.files ? req.files.map(f => f.filename) : []
+  console.log("FILES:", req.files)
+
 
   const newItem = {
     id: Date.now().toString(),
@@ -375,6 +450,7 @@ app.post("/createitem", upload.array("images", 3), (req, res) => {
 
   res.redirect("/market")
 })
+
 
 
 // edit Items
@@ -415,6 +491,40 @@ app.delete("/deleteitem/:id", (req, res) => {
   res.redirect("/market")
 })
 
+
+// add an item to saved list
+app.post("/toggle-save/:id", (req, res) => {
+  const { id } = req.params
+  const currentUser = user_db[0]   // temp logged user
+
+  if (!currentUser.savedItems) currentUser.savedItems = []
+
+  const index = currentUser.savedItems.indexOf(id)
+
+  if (index === -1) {
+    currentUser.savedItems.push(id)   // add
+  } else {
+    currentUser.savedItems.splice(index, 1) // remove
+  }
+
+  res.redirect("back")
+})
+
+
+// SAVED LIST
+app.get("/saved", (req, res) => {
+  const currentUser = user_db[0]   // temporary logged user
+
+  if (!currentUser || !currentUser.savedItems) {
+    return res.render("saved", { items: [] })
+  }
+
+  const savedItems = items.filter(item =>
+    currentUser.savedItems.includes(item.id)
+  )
+
+  res.render("saved", { items: savedItems })
+})
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

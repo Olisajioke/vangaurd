@@ -64,6 +64,20 @@
 
                 <a href="/item/<%= item.id %>" class="btn btn-outline-secondary btn-sm">View</a>
 
+                 <%
+                    const currentUser = db.users[0]
+                    const isSaved = currentUser.savedItems && currentUser.savedItems.includes(item.id)
+                 %>
+
+                <form action="/toggle-save/<%= item.id %>" method="POST" class="d-inline">
+                    <button class="btn btn-link p-0 border-0">
+                        <% if (isSaved) { %>
+                            ❤️
+                        <% } else { %>
+                            🤍
+                        <% } %>
+                    </button>
+                </form>
 
                 <button class="btn btn-primary btn-sm"
                         data-bs-toggle="modal"
