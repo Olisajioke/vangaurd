@@ -1,0 +1,81 @@
+<%- include("partials/header") %>
+
+<!-- Jumbotron -->
+<div class="jumbotron jumbotron-fluid text-center text-black" 
+     style="background-image: url('/images/articles_bg.png'); background-size: cover; background-position: center; padding: 5rem 2rem;">
+  <h1 class="display-4"><%= isEdit ? "Edit Story" : "Write a New Story" %></h1>
+  <hr class="my-4 bg-light">
+  <p class="lead">
+    <a class="btn btn-primary btn-lg" href="/articles" role="button">Read Previous Stories</a>
+  </p>
+</div>
+
+<!-- Form Card -->
+<div class="container my-5">
+  <div class="card shadow-lg mx-auto" stsyle="max-width: 800px;">
+    <div class="card-header bg-primary text-white text-center">
+      <h3><%= isEdit ? "Edit Your Story" : "Create a New Story" %></h3>
+    </div>
+    <div class="card-body">
+      <form action="<%= isEdit ? '/submit_story?mode=edit' : '/submit_story' %>" method="POST" enctype="multipart/form-data">
+        
+        <% if (isEdit) { %>
+          <input type="hidden" name="postId" value="<%= post.id %>">
+        <% } %>
+
+        <!-- TITLE -->
+        <div class="form-group">
+          <label for="title">Post Title</label>
+          <input type="text" name="title" id="title" class="form-control" required
+                 value="<%= isEdit ? post.title : "" %>">
+        </div>
+
+        <!-- SUBTITLE -->
+        <div class="form-group">
+          <label for="subtitle">Subtitle</label>
+          <input type="text" name="subtitle" id="subtitle" class="form-control" required
+                 value="<%= isEdit ? post.subtitle : "" %>">
+        </div>
+
+        <!-- IMAGE -->
+        <div class="form-group">
+          <label for="image">Upload Image</label>
+          <input type="file" name="image" id="image" accept="image/*" class="form-control">
+          
+          <% if (isEdit && post.image) { %>
+            <p class="mt-2">Current image:</p>
+            <img src="/uploads/<%= post.image %>" alt="Post Image" style="max-width: 200px; display:block;">
+          <% } %>
+        </div>
+
+        <!-- AUTHOR -->
+        <div class="form-group">
+          <label for="author">Author Name</label>
+          <input type="text" name="author" id="author" class="form-control" required placeholder="WRITE ANNONYMOUS IF PREFERRED"
+                 value="<%= isEdit ? post.author : "" %>" <%= isEdit ? "readonly" : "" %>>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="form-group">
+          <label for="content">Write your story here...</label>
+          <textarea id="content" name="content" class="form-control" placeholder="Unleash your creativity here..." required><%= isEdit ? post.content : "" %></textarea>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <button type="submit" class="btn btn-primary btn-block">
+          <%= isEdit ? "Save Changes" : "Submit Story" %>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- CKEditor -->
+<script src="/ckeditor/ckeditor.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    CKEDITOR.replace("content", { height: 300 });
+  });
+</script>
+
+<%- include("partials/footer") %>

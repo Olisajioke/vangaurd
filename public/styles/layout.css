@@ -1,0 +1,211 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100&display=swap");
+
+/* Saudi-Inspired Gold Navbar */
+.navbar {
+  background: linear-gradient(
+    90deg,
+    #b8860b,
+    #d4af37,
+    #b8860b
+  );
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Make text contrast cleanly */
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #1f1f1f !important;
+  font-weight: 500;
+}
+
+/* Hover effect */
+.navbar .nav-link:hover {
+  color: #ffffff !important;
+  transition: 0.3s ease;
+}
+
+/* Dropdown menu refinement */
+.dropdown-menu {
+  border-radius: 10px;
+}
+
+
+@media (max-width: 991px) {
+  #navbarSupportedContent ul li a {
+    padding: 12px 30px;
+  }
+  .hori-selector {
+    margin-top: 0px;
+    margin-left: 10px;
+    border-radius: 0;
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+  }
+  .hori-selector .left,
+  .hori-selector .right {
+    right: 10px;
+  }
+  .hori-selector .left {
+    top: -25px;
+    left: auto;
+  }
+  .hori-selector .right {
+    bottom: -25px;
+  }
+  .hori-selector .left:before {
+    left: -25px;
+    top: -25px;
+  }
+  .hori-selector .right:before {
+    bottom: -25px;
+    left: -25px;
+  }
+}
+
+
+/* ===== FOOTER BASE ===== */
+.site-footer {
+  background-color: #1c1c1c;   /* deep charcoal */
+  color: #f1f1f1;
+}
+
+/* Section titles */
+.site-footer h5,
+.site-footer h6 {
+  color: #d4af37;  /* gold accent */
+  letter-spacing: 0.5px;
+}
+
+/* Links */
+.site-footer .nav-link {
+  color: #cfcfcf !important;
+  transition: all 0.3s ease;
+}
+
+.site-footer .nav-link:hover {
+  color: #d4af37 !important;
+  transform: translateX(4px);
+}
+
+/* Form inputs */
+.site-footer .form-control {
+  background-color: #2a2a2a;
+  border: 1px solid #333;
+  color: #ffffff;
+}
+
+.site-footer .form-control:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 0 0.15rem rgba(212, 175, 55, 0.25);
+}
+
+/* Button */
+.site-footer .btn-primary {
+  background-color: #d4af37;
+  border: none;
+  color: #1c1c1c;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.site-footer .btn-primary:hover {
+  background-color: #b8860b;
+  transform: translateY(-2px);
+}
+
+/* Bottom bar */
+.site-footer .border-top {
+  border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+.site-footer .fab {
+  color: #cfcfcf;
+  transition: 0.3s ease;
+}
+
+.site-footer .fab:hover {
+  color: #d4af37;
+  transform: scale(1.15);
+}
+
+/* Improve footer paragraph visibility */
+.site-footer p {
+  color: #cfcfcf;
+}
+
+/* Make the small muted paragraph under "Need Help?" visible */
+.site-footer .text-muted {
+  color: #bdbdbd !important;
+}
+
+/* Make textarea and input text visible */
+.site-footer .form-control {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: #ffffff;
+}
+
+.site-footer .form-control::placeholder {
+  color: #aaaaaa;
+}
+
+/* Fix copyright visibility */
+.site-footer .small,
+.site-footer .mb-2 {
+  color: #cfcfcf !important;
+}
+
+.site-footer .border-top p {
+  color: #dcdcdc !important;
+}
+
+
+
+.alert {
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+.comments-section .comment {
+  background-color: #f8f9fa;
+}
+.comments-section .comment .comment-reply {
+  background-color: #e9ecef;
+}
+
+#flash-container .alert {
+  animation: slideDown 0.4s ease-out;
+}
+
+
+.hero-overlay {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.btn-primary {
+  background-color: #d4af37;
+  border: none;
+  color: #1c1c1c;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,36 @@
+<%- include("partials/header") %>
+
+<!-- Jumbotron -->
+
+<div class="jumbotron jumbotron-fluid text-center text-black" style="background-image: url('/images/forum.jpg'); background-size: cover; background-position: center; padding: 5rem 2rem;">
+  <h1 class="display-4">WELCOME TO CLINIC STORIES</h1>
+  <p class="text-black lead">This section is dedicated to sharing stories from our clinic and other activities experienced.</p>
+  <hr class="my-4 bg-light">
+  <p>Read the latest stories below</p>
+  <p class="lead">
+    <a class="btn btn-primary btn-lg" href="/new_clinic_stories" role="button">Add New Story</a>
+  </p>
+</div>
+
+<main class="container mt-4">
+  <% if (db.posts && db.posts.length > 0) { %>
+    <% db.posts.forEach(function(post) { %>
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title"><%= post.title %></h2>
+          <p class="lead"><%= post.subtitle %></p>
+          <p class="text-muted">Written by: <%= post.author %></p>
+          <p class="text-muted">Date: <%= new Date(post.date).toLocaleString() %></p>
+          <p>Read <a href="/view_posts/<%= post.id %>">here</a></p>
+        </div>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <div class="alert alert-info">
+      <h4>No posts yet!</h4>
+      <p>Create one <a href="/new_clinic_stories">here</a></p>
+    </div>
+  <% } %>
+</main>
+
+<%- include("partials/footer") %>
