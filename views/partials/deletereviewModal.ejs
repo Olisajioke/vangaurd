@@ -1,0 +1,59 @@
+<div class="modal fade" id="deleteReviewModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+
+      <!-- HEADER -->
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Delete Review
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body text-center py-4">
+
+        <p class="mb-2">
+          Are you sure you want to delete the review for
+        </p>
+
+        <div class="fw-semibold text-dark">
+          <%= review.clinic_name %>
+        </div>
+
+        <div class="text-muted small mb-3">
+          posted on <%= review.post_date %>
+        </div>
+
+        <p class="text-danger small mb-0">
+          This action cannot be undone.
+        </p>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer justify-content-center border-0 pb-4">
+
+        <form action="/reviews/delete/<%= review.post_id %>"
+              method="POST"
+              class="d-flex gap-2">
+
+          <button type="submit" class="btn btn-danger px-4">
+            Delete
+          </button>
+
+          <button type="button"
+                  class="btn btn-outline-secondary px-4"
+                  data-bs-dismiss="modal">
+            Cancel
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>

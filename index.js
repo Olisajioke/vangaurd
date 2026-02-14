@@ -1,4 +1,3 @@
-
 import express from "express";
 import bodyParser from "body-parser";
 import session from "express-session";
@@ -6,7 +5,21 @@ import flash from "connect-flash";
 import multer from "multer";
 import methodOverride from "method-override"
 import bcrypt from "bcrypt";
+import db from "./db.js"
+
 import path from "path"
+
+// 🔎 TEST DB CONNECTION
+async function testDB() {
+  try {
+    const [rows] = await db.query("SELECT DATABASE() AS db")
+    console.log("Connected to DB:", rows[0].db)
+  } catch (err) {
+    console.error("DB error:", err.message)
+  }
+}
+
+testDB()
 
 
 //CONSTANTS
@@ -23,16 +36,70 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage })
 
+// RESTRICT USERS:
+function requireLogin(req, res, next) {
+  if (!req.session.userId) return res.redirect("/login")
+  next()
+}
+
+app.use(session({
+  secret: "keyboard cat",
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(async (req, res, next) => {
+  try {
+    const userId = req.session?.userId;
+
+    if (userId) {
+      const [[user]] = await db.query(
+        "SELECT fname, role FROM users WHERE id=?",
+        [userId]
+      );
+
+      res.locals.userName = user?.fname;
+      res.locals.userRole = user?.role;
+    }
+
+    next();
+  } catch (err) {
+    console.error("User middleware error:", err);
+    next(); // never block request
+  }
+});
+
+
+
+// ADMIN function
+function requireAdmin(req, res, next) {
+  if (!req.session.userId) return res.redirect("/login")
+
+  db.query("SELECT role FROM users WHERE id=?", [req.session.userId])
+    .then(([rows]) => {
+      if (!rows[0] || rows[0].role !== "admin") {
+        return res.status(403).send("Admins only")
+      }
+      next()
+    })
+    .catch(() => res.sendStatus(500))
+}
+// ckeditor upload
+app.post("/upload-review-image", upload.single("upload"), (req, res) => {
+  const url = "/uploads/" + req.file.filename
+
+  res.json({
+    uploaded: 1,
+    fileName: req.file.filename,
+    url: url
+  })
+})
+
+
 app.use((req, res, next) => {
   res.locals.db = db;
   next();
 });
-
-const db = {
-  users: [],
-  posts: []
-};
-const items = [];
 
 // Session middleware (required for flash)
 app.use(session({
@@ -57,150 +124,210 @@ app.set("view engine", "ejs");
 app.use(methodOverride("_method"))
 
 
+app.use(async (req, res, next) => {
+  try {
+    res.locals.userId = req.session?.userId || null
+    res.locals.userRole = null
+    res.locals.userName = null
 
-const user_db = [];
-let jobs = []
+    if (req.session?.userId) {
+      const [[user]] = await db.query(
+        "SELECT fname, role FROM users WHERE id=?",
+        [req.session.userId]
+      )
 
+      if (user) {
+        res.locals.userRole = user.role
+        res.locals.userName = user.fname
+      }
+    }
 
-
-app.get("/", (req, res) => {
-  res.render("index", {db:db})
+    next()
+  } catch (err) {
+    console.error("locals middleware error:", err)
+    next()
+  }
 })
 
+
+app.use((req, res, next) => {
+  res.locals.userId = req.session?.userId || null;
+  next();
+});
+
+
+
+// HOME ROUTE
+app.get("/", (req, res) => {
+  res.render("index")
+})
 
 
 ///ARTICLES ROUTES
 
-app.get("/articles", (req, res) => {
-    db.posts.sort((a, b) => b.id - a.id);
-    res.render("articles", { db: db  });
-});
+// GET all articles
+app.get("/articles", requireLogin, async (req, res) => {
+  const [articles] = await db.query(`
+    SELECT p.id, p.title, p.subtitle, p.content,
+           p.image1 AS image, p.created_at,
+           u.fname
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.type='article'
+    ORDER BY p.created_at DESC
+  `)
+
+  res.render("articles", { articles })
+})
+
 
 
 // Route to create a new post or edit an existing one
-app.get("/new_clinic_stories", (req, res) => {
-  const postId = req.query.id;       // undefined if creating new
-  const isEdit = req.query.mode === "edit";  // true if editing
+app.get("/new_clinic_stories", requireLogin, async (req, res) => {
+  const postId = req.query.id
+  const isEdit = req.query.mode === "edit"
 
-  let post = null;
+  let post = null
+
   if (isEdit && postId) {
-    post = db.posts.find(p => p.id === parseInt(postId));
+    const [[row]] = await db.query(
+      "SELECT * FROM posts WHERE id=? AND type='article'",
+      [postId]
+    )
+    post = row
   }
 
-  res.render("create_post", { post, isEdit });
-});
+  res.render("create_post", { post, isEdit })
+})
+
 
 
 // Handle form submission for creating or editing a post
-app.post("/submit_story", upload.single("image"), (req, res) => {
-  const { title, subtitle, content, author, postId } = req.body; // <-- postId will be sent if editing
-  const postdate = new Date().toLocaleDateString();
+app.post("/submit_story", requireLogin, upload.single("image"), async (req, res) => {
+  const { title, subtitle, content, postId } = req.body
+  const userId = req.session.userId
+  const image = req.file ? req.file.filename : null
 
-  if (postId) {
-    // --- EDIT MODE ---
-    const existingPost = db.posts.find(p => p.id === parseInt(postId));
+  try {
 
-    if (!existingPost) {
-      return res.status(404).send("Post not found");
+    if (postId) {
+      // EDIT
+      if (image) {
+        await db.query(`
+          UPDATE posts
+          SET title=?, subtitle=?, content=?, image1=?
+          WHERE id=? AND type='article'
+        `, [title, subtitle, content, image, postId])
+      } else {
+        await db.query(`
+          UPDATE posts
+          SET title=?, subtitle=?, content=?
+          WHERE id=? AND type='article'
+        `, [title, subtitle, content, postId])
+      }
+
+      res.redirect(`/view_posts/${postId}`)
+
+    } else {
+      // CREATE
+      const newId = Date.now().toString()
+
+      await db.query(`
+        INSERT INTO posts
+        (id, user_id, type, title, subtitle, content, image1)
+        VALUES (?, ?, 'article', ?, ?, ?, ?)
+      `, [newId, userId, title, subtitle, content, image])
+
+      res.redirect(`/view_posts/${newId}`)
     }
 
-    // Update fields
-    existingPost.title = title;
-    existingPost.subtitle = subtitle;
-    existingPost.content = content;
-    existingPost.author = author;
-    existingPost.date = postdate;
-
-    // Only update image if a new file is uploaded
-    if (req.file) {
-      existingPost.image = req.file.filename;
-    }
-    req.flash('success_msg', 'Post updated successfully');
-    res.redirect(`/view_posts/${existingPost.id}`);
-  } else {
-    // --- CREATE NEW POST ---
-    const newPostId = Date.now();
-    db.posts.push({
-      id: newPostId,
-      title,
-      subtitle,
-      content,
-      image: req.file ? req.file.filename : null,
-      author,
-      date: postdate,
-      comments: []
-    });
-
-    db.users.push({
-      id: newPostId,
-      name: author
-    });
-    req.flash('success_msg', 'New post created successfully');
-    res.render("articles", { db: db, success_msg: "New post created successfully!", content: ""});
+  } catch (err) {
+    console.error(err)
+    res.send("Article save error")
   }
-});
+})
 
 
 // View a single post
-app.get("/view_posts/:id", (req, res) => {
-    // view a single post based on ID
-  const postId = parseInt(req.params.id); // grab the ID from URL
-  const post = db.posts.find(p => p.id === postId);
-  const author = db.users.find(u => u.id === postId);
+app.get("/view_posts/:id", requireLogin, async (req, res) => {
+  const { id } = req.params
 
-  if (!post) {
-    req.flash('error', 'Post not found');
-    return res.status(404).send("Post not found");
-  }
+  const [[post]] = await db.query(`
+    SELECT p.*, u.fname
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.id=? AND p.type='article'
+  `, [id])
 
-  const success_msg = req.params.success_msg || req.flash('success_msg');
-  res.render("view_post", { post: post, author: author, editCommentId: req.query.edit, success_msg: success_msg });
-});
+  if (!post) return res.status(404).send("Post not found")
+
+  const [comments] = await db.query(`
+    SELECT c.id, c.content, c.created_at, u.fname
+    FROM comments c
+    LEFT JOIN users u ON c.user_id = u.id
+    WHERE c.post_id=?
+    ORDER BY c.created_at ASC
+  `, [id])
+
+  res.render("view_post", {
+    post,
+    comments,
+    editCommentId: req.query.edit
+  })
+})
 
 
+// USER REGISTRATION
 // Route to display the add new user form
 app.get("/add_new_user", (req, res) => {
     res.render("add_new_user");
 });
 
 // route to save new user
-
 app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
-  const fname = req.body.fName;
-  const lname = req.body.lName;
-  const fullname = fname + " " + lname;
-  const email = req.body.email;
-  const password1 = req.body.password1;
-  const password2 = req.body.password2;
-  const location = req.body.location;
-  const profilepic = req.file ? req.file.filename : null;
+  try {
+    const { fName, lName, email, password, location, vanguard } = req.body
 
-  // password match check
-  if (password1 !== password2) {
-    req.flash("error", "Passwords do not match");
-    return res.redirect("back");
+    // confirm vanguard code
+    if (vanguard !== process.env.VANGUARD_CODE) {
+      return res.render("add_new_user", { error: "Invalid Vanguard code" })
+    }
+
+    if (password !== req.body.confirmPassword) {
+      return res.render("add_new_user", { error: "Passwords do not match" })
+    }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const profilepic = req.file ? req.file.filename : null
+    const userId = Date.now().toString()
+
+    await db.query(`
+      INSERT INTO users
+      (id, fname, lname, email, password, location, profilepic)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      userId,
+      fName,
+      lName,
+      email,
+      hashedPassword,
+      location,
+      profilepic
+    ])
+
+    req.session.userId = userId
+    res.redirect("/profile")
+
+  } catch (err) {
+    console.error(err)
+    res.send("Registration error")
   }
-
-  // hash password
-  const hashedPassword = await bcrypt.hash(password1, 10);
-
-  user_db.push({
-    id: Date.now().toString(),
-    fullname,
-    email,
-    password: hashedPassword,
-    location,
-    profilepic,
-    savedItems: []
-  });
-
-  console.log("New user added:", user_db[user_db.length - 1]);
-
-  req.flash("success", "Your profile was created successfully!");
-  res.redirect("/"); 
-});
+})
 
 
+// user page
 app.get("/user/:id", (req, res) => {
   const { id } = req.params
   const user = user_db.find(u => u.id === id)
@@ -212,32 +339,64 @@ app.get("/user/:id", (req, res) => {
   res.render("user", { user, savedItems })
 })
 
+// user login
 
-
-// EDIT USER
-app.put("/edituser/:id", upload.single("profilepic"), (req, res) => {
-  const { id } = req.params
-  const user = user_db.find(u => u.id === id)
-
-  if (!user) return res.status(404).send("User not found")
-
-  const { fName, lName, email, location, password } = req.body
-
-  user.fullname = fName + " " + lName
-  user.email = email
-  user.location = location
-
-  if (password && password.trim() !== "") {
-    user.password = password
-  }
-
-  if (req.file) {
-    user.profilepic = req.file.filename
-  }
-
-  res.redirect("/user/" + id)
+app.get("/login", (req, res) => {
+  res.render("login")
 })
 
+
+
+// handle login
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body
+
+  const [[user]] = await db.query(
+    "SELECT * FROM users WHERE email=?",
+    [email]
+  )
+
+  if (!user) return res.render("login", { error: "Invalid credentials" })
+
+  let match = false
+
+  // CASE 1 — already hashed
+  if (user.password.startsWith("$2")) {
+    match = await bcrypt.compare(password, user.password)
+  }
+
+  // CASE 2 — legacy plain password
+  else {
+    match = password === user.password
+
+    if (match) {
+      // upgrade to hash
+      const newHash = await bcrypt.hash(password, 10)
+      await db.query(
+        "UPDATE users SET password=? WHERE id=?",
+        [newHash, user.id]
+      )
+    }
+  }
+
+  if (!match) return res.render("login", { error: "Invalid credentials" })
+
+  req.session.userId = user.id
+  req.session.save(() => res.redirect("/profile"))
+})
+
+
+
+// delete user  
+app.post("/user/delete/:id", async (req, res) => {
+  const { id } = req.params
+
+  await db.query("DELETE FROM users WHERE id=?", [id])
+
+  req.session.destroy()
+
+  res.redirect("/")
+})
 
 // add comments
 app.post("/posts/:id/comments", (req, res) => {
@@ -263,6 +422,135 @@ app.post("/posts/:id/comments", (req, res) => {
 });
 
 
+//profile page
+app.get("/profile", requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.userId
+
+    // USER
+    const [[user]] = await db.query(
+      `SELECT id, fname, lname, email, location, profilepic, role, created_at
+       FROM users
+       WHERE id=?`,
+      [userId]
+    )
+
+    if (!user) return res.redirect("/login")
+
+    // POSTS COUNT
+    const [[postCount]] = await db.query(
+      `SELECT COUNT(*) AS count
+       FROM posts
+       WHERE user_id=?`,
+      [userId]
+    )
+
+    // SAVED COUNT
+    const [[savedCount]] = await db.query(
+      `SELECT COUNT(*) AS count
+       FROM saved_items
+       WHERE user_id=?`,
+      [userId]
+    )
+
+    // RELATIONSHIP COUNT (safe: table may differ)
+    let relCount = 0
+    try {
+      const [[r]] = await db.query(
+        `SELECT COUNT(*) AS count
+         FROM relationship_profiles
+         WHERE user_id=?`,
+        [userId]
+      )
+      relCount = r.count
+    } catch {
+      relCount = 0
+    }
+
+    res.render("profile", {
+      user,
+      stats: {
+        posts: postCount.count,
+        saved: savedCount.count,
+        relationships: relCount
+      }
+    })
+
+  } catch (err) {
+    console.error("PROFILE ERROR →", err)
+    res.send("Profile load error")
+  }
+})
+
+
+// EDIT USER WITH DB
+app.put("/edituser/:id", upload.single("profilepic"), async (req, res) => {
+  try {
+    const userId = req.params.id
+    const { fName, lName, email, location, password, removePhoto } = req.body
+
+    const fields = []
+    const values = []
+
+    if (fName) {
+      fields.push("fname=?")
+      values.push(fName)
+    }
+
+    if (lName) {
+      fields.push("lname=?")
+      values.push(lName)
+    }
+
+    if (email) {
+      fields.push("email=?")
+      values.push(email)
+    }
+
+    if (location) {
+      fields.push("location=?")
+      values.push(location)
+    }
+
+    // password change
+
+    if (password && password !== "") {
+      if (password !== req.body.confirmPassword) {
+        return res.send("Passwords do not match")
+      }
+
+      const hash = await bcrypt.hash(password, 10)
+      fields.push("password=?")
+      values.push(hash)
+    }
+
+
+    // remove photo
+    if (removePhoto) {
+      fields.push("profilepic=NULL")
+    }
+
+    // new upload
+    if (req.file) {
+      fields.push("profilepic=?")
+      values.push(req.file.filename)
+    }
+
+    if (fields.length > 0) {
+      values.push(userId)
+      await db.query(
+        `UPDATE users SET ${fields.join(", ")} WHERE id=?`,
+        values
+      )
+    }
+
+    res.redirect("/profile")
+  } catch (err) {
+    console.error(err)
+    res.send("Update failed")
+  }
+})
+
 // DELETE USER
 app.delete("/deleteuser/:id", (req, res) => {
   const { id } = req.params
@@ -278,6 +566,13 @@ app.delete("/deleteuser/:id", (req, res) => {
   res.redirect("/")
 })
 
+// Logout route
+app.post("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login")
+  })
+})
+
 
 // Edit comments page route
 app.get("/posts/:id/edit_comments", (req, res) => {
@@ -291,134 +586,153 @@ app.get("/posts/:id/edit_comments", (req, res) => {
 
 
 // Edit comment route
-app.post("/posts/:postId/comments/:commentId/edit", (req, res) => {
-  const postId = parseInt(req.params.postId);
-  const commentId = parseInt(req.params.commentId);
+app.post("/posts/:postId/comments/:commentId/edit", requireLogin, async (req, res) => {
+  const { postId, commentId } = req.params
+  const { comment } = req.body
 
-  const post = db.posts.find(p => p.id === postId);
-  if (!post) return res.status(404).send("Post not found");
+  await db.query(
+    `UPDATE comments
+     SET content=?
+     WHERE id=? AND post_id=?`,
+    [comment, commentId, postId]
+  )
 
-  const comment = post.comments.find(c => c.id === commentId);
-  if (!comment) return res.status(404).send("Comment not found");
+  res.redirect("back")
+})
 
-  comment.comment = req.body.comment;
-  comment.date = new Date().toLocaleString();
-  req.flash('success_msg', 'Comment updated successfully');
-  res.redirect("/view_posts/" + postId);
-});
 
 
 // Delete a post
-app.post("/delete_post/:id", (req, res) => {
-    const postId = parseInt(req.params.id);
-    const postIndex = db.posts.findIndex(p => p.id === postId);
+app.post("/delete_post/:id", requireLogin, async (req, res) => {
+  const { id } = req.params
 
-    if (postIndex === -1) {
-        return res.status(404).send("Post not found");
-    }
+  await db.query("DELETE FROM comments WHERE post_id=?", [id])
+  await db.query("DELETE FROM posts WHERE id=?", [id])
 
-    // Remove the post
-    db.posts.splice(postIndex, 1);
+  res.redirect("/articles")
+})
 
-    // remove the author as well
-    const userIndex = db.users.findIndex(u => u.id === postId);
-    if (userIndex !== -1) db.users.splice(userIndex, 1);
-
-    req.flash('success_msg', 'Post deleted successfully');
-    res.redirect("/articles"); // Go back to homepage
-});
 
 // Delete Comment
-app.post("/posts/:postId/comments/:commentId/delete", (req, res) => {
-  const postId = parseInt(req.params.postId);
-  const commentId = parseInt(req.params.commentId);
+app.post("/posts/:postId/comments/:commentId/delete", requireLogin, async (req, res) => {
+  const { postId, commentId } = req.params
 
-  const post = db.posts.find(p => p.id === postId);
-  if (!post) return res.status(404).send("Post not found");
+  await db.query(
+    "DELETE FROM comments WHERE id=? AND post_id=?",
+    [commentId, postId]
+  )
 
-  post.comments = post.comments.filter(c => c.id !== commentId);
-  req.flash('success_msg', 'Comment deleted successfully');
-  res.redirect("/view_posts/" + postId);
-});
+  res.redirect("back")
+})
 
 
 
                   /// JOBS
 
 // route to display jobs
-app.get("/showjobs", (req, res) => {
-  res.render("showjobs", {jobs: jobs})
+app.get("/showjobs", requireLogin, async (req, res) => {
+  const [rows] = await db.query(`
+    SELECT p.id, p.title, p.location, p.contact,
+           j.clinic, j.salary, j.description
+    FROM posts p
+    JOIN jobs j ON p.id = j.post_id
+    ORDER BY p.created_at DESC
+  `)
+
+  res.render("showjobs", { jobs: rows })
 })
+
 
 
 // route to create job
-app.post("/createJobs", (req, res) => {
+app.post("/createJobs", requireLogin, async (req, res) => {
   const { title, clinic, location, salary, contact, description } = req.body
+  const userId = req.session.userId
+  const postId = Date.now().toString()
 
-  const newJob = {
-    id: Date.now().toString(),
-    title,
-    clinic,
-    location,
-    salary,
-    contact,
-    description,
-    createdAt: new Date()
-  }
+  // insert post
+  await db.query(`
+    INSERT INTO posts
+    (id, user_id, type, title, location, contact)
+    VALUES (?, ?, 'job', ?, ?, ?)
+  `, [postId, userId, title, location, contact])
 
-  jobs.push(newJob)
+  // insert job details
+  await db.query(`
+    INSERT INTO jobs
+    (post_id, clinic, salary, description)
+    VALUES (?, ?, ?, ?)
+  `, [postId, clinic, salary, description])
 
   res.redirect("/showjobs")
 })
+
 
 //EDIT JOBS
-app.put("/editjob/:id", (req, res) => {
-  const { id } = req.params;
+app.put("/editjob/:id", requireLogin, async (req, res) => {
+  const { id } = req.params
+  const { title, clinic, location, salary, contact, description } = req.body
 
-  const job = jobs.find(j => j.id === id);
-  if (!job) return res.status(404).send("Job not found");
+  // update post
+  await db.query(`
+    UPDATE posts
+    SET title=?, location=?, contact=?
+    WHERE id=?
+  `, [title, location, contact, id])
 
-  const { title, clinic, location, salary, contact, description } = req.body;
-
-  job.title = title;
-  job.clinic = clinic;
-  job.location = location;
-  job.salary = salary;
-  job.contact = contact;
-  job.description = description;
+  // update job details
+  await db.query(`
+    UPDATE jobs
+    SET clinic=?, salary=?, description=?
+    WHERE post_id=?
+  `, [clinic, salary, description, id])
 
   res.redirect("/showjobs")
 })
+
 
 
 //delete jobs
 
-app.delete('/deletejob/:id', (req, res) => {
+app.delete("/deletejob/:id", requireLogin, async (req, res) => {
   const { id } = req.params
 
-  const index = jobs.findIndex(j => j.id === id)
-
-  if (index === -1) {
-    return res.status(404).send("Job not found")
-  }
-
-  jobs.splice(index, 1)
+  await db.query("DELETE FROM jobs WHERE post_id=?", [id])
+  await db.query("DELETE FROM posts WHERE id=?", [id])
 
   res.redirect("/showjobs")
 })
+
 
 
               /// MARKET PLACE
 
 // show all items for sale
-app.get("/market", (req, res) => {
-  res.render("market", { items })
+app.get("/market", requireLogin, async (req, res) => {
+  const [rows] = await db.query(`
+    SELECT p.id, p.title, p.content AS description,
+           p.location, p.contact,
+           p.image1, p.image2, p.image3,
+           m.price
+    FROM posts p
+    JOIN market_items m ON p.id = m.post_id
+    ORDER BY p.created_at DESC
+  `)
+
+  res.render("market", { items: rows })
 })
 
+
 // get a single item
-app.get("/item/:id", (req, res) => {
+app.get("/item/:id", requireLogin, async (req, res) => {
   const { id } = req.params
-  const item = items.find(i => i.id === id)
+
+  const [[item]] = await db.query(`
+    SELECT p.*, m.price
+    FROM posts p
+    JOIN market_items m ON p.id = m.post_id
+    WHERE p.id = ?
+  `, [id])
 
   if (!item) return res.status(404).send("Item not found")
 
@@ -426,105 +740,489 @@ app.get("/item/:id", (req, res) => {
 })
 
 
+
 // create item for sale
-app.post("/createitem", upload.array("images", 3), (req, res) => {
-  const { title, price, description, location, seller, contact } = req.body
+app.post("/createitem", upload.array("images", 3), async (req, res) => {
+  try {
+    const { title, price, description, location, contact } = req.body
+    const userId = req.session.userId
+    const postId = Date.now().toString()
 
-  const imageFiles = req.files ? req.files.map(f => f.filename) : []
-  console.log("FILES:", req.files)
+    const files = req.files || []
+    const image1 = files[0]?.filename || null
+    const image2 = files[1]?.filename || null
+    const image3 = files[2]?.filename || null
 
+    // insert post
+    await db.query(`
+      INSERT INTO posts
+      (id, user_id, type, title, content, location, contact, image1, image2, image3)
+      VALUES (?, ?, 'market', ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      postId,
+      userId,
+      title,
+      description,
+      location,
+      contact,
+      image1,
+      image2,
+      image3
+    ])
 
-  const newItem = {
-    id: Date.now().toString(),
-    title,
-    price,
-    description,
-    seller,
-    location,
-    contact,
-    images: imageFiles,
-    createdAt: new Date()
+    // insert market details
+    await db.query(`
+      INSERT INTO market_items (post_id, price)
+      VALUES (?, ?)
+    `, [postId, price])
+
+    res.redirect("/market")
+
+  } catch (err) {
+    console.error(err)
+    res.send("Error creating item")
   }
-
-  items.push(newItem)
-
-  res.redirect("/market")
 })
 
 
 
-// edit Items
-app.put("/edititem/:id", upload.array("images", 3), (req, res) => {
+// EDIT ITEM AND UPDATE
+app.put("/edititem/:id", upload.array("images", 3), async (req, res) => {
   const { id } = req.params
-  const item = items.find(i => i.id === id)
+  const { title, price, description, location, contact } = req.body
 
-  if (!item) return res.status(404).send("Item not found")
+  const files = req.files || []
 
-  const { title, price, description, seller, contact, location } = req.body
-
-  item.title = title
-  item.price = price
-  item.description = description
-  item.seller = seller
-  item.contact = contact
-  item.location = location
-
-  // if new images uploaded → replace
-  if (req.files && req.files.length > 0) {
-    item.images = req.files.map(f => f.filename)
+  let image1 = null, image2 = null, image3 = null
+  if (files.length > 0) {
+    image1 = files[0]?.filename || null
+    image2 = files[1]?.filename || null
+    image3 = files[2]?.filename || null
   }
+
+  // update post
+  if (files.length > 0) {
+    await db.query(`
+      UPDATE posts
+      SET title=?, content=?, location=?, contact=?,
+          image1=?, image2=?, image3=?
+      WHERE id=?
+    `, [title, description, location, contact, image1, image2, image3, id])
+  } else {
+    await db.query(`
+      UPDATE posts
+      SET title=?, content=?, location=?, contact=?
+      WHERE id=?
+    `, [title, description, location, contact, id])
+  }
+
+  // update price
+  await db.query(`
+    UPDATE market_items
+    SET price=?
+    WHERE post_id=?
+  `, [price, id])
 
   res.redirect("/market")
 })
+
 
 
 // delete item
 
-app.delete("/deleteitem/:id", (req, res) => {
+app.delete("/deleteitem/:id", async (req, res) => {
   const { id } = req.params
-  const index = items.findIndex(i => i.id === id)
 
-  if (index === -1) return res.status(404).send("Item not found")
-
-  items.splice(index, 1)
+  await db.query("DELETE FROM market_items WHERE post_id=?", [id])
+  await db.query("DELETE FROM posts WHERE id=?", [id])
 
   res.redirect("/market")
 })
 
 
-// add an item to saved list
-app.post("/toggle-save/:id", (req, res) => {
+// SAVED LIST
+app.post("/toggle-save/:id", requireLogin, async (req, res) => {
+  const userId = req.session.userId
   const { id } = req.params
-  const currentUser = user_db[0]   // temp logged user
 
-  if (!currentUser.savedItems) currentUser.savedItems = []
+  const [[exists]] = await db.query(
+    "SELECT * FROM saved_items WHERE user_id=? AND post_id=?",
+    [userId, id]
+  )
 
-  const index = currentUser.savedItems.indexOf(id)
-
-  if (index === -1) {
-    currentUser.savedItems.push(id)   // add
+  if (exists) {
+    await db.query(
+      "DELETE FROM saved_items WHERE user_id=? AND post_id=?",
+      [userId, id]
+    )
   } else {
-    currentUser.savedItems.splice(index, 1) // remove
+    await db.query(
+      "INSERT INTO saved_items (user_id, post_id) VALUES (?, ?)",
+      [userId, id]
+    )
   }
 
   res.redirect("back")
 })
 
 
-// SAVED LIST
-app.get("/saved", (req, res) => {
-  const currentUser = user_db[0]   // temporary logged user
+// RELATIONSHIPS:
 
-  if (!currentUser || !currentUser.savedItems) {
-    return res.render("saved", { items: [] })
+// get relationship form
+app.get("/relationships/new", (req, res) => {
+  res.render("relationshipForm")
+})
+
+// show relationships
+app.get("/relationships", async (req, res) => {
+  const [rows] = await db.query(`
+    SELECT p.id AS post_id, r.*
+    FROM posts p
+    JOIN relationship_profiles r ON p.id = r.post_id
+    WHERE p.type = 'relationship'
+    ORDER BY p.created_at DESC
+  `)
+
+  res.render("relationships", { relationships: rows })
+})
+
+// get one relationship
+app.get("/relationships/:id", async (req, res) => {
+  const { id } = req.params
+
+  const [[rel]] = await db.query(`
+    SELECT p.user_id, r.*
+    FROM posts p
+    JOIN relationship_profiles r ON p.id = r.post_id
+    WHERE p.id = ?
+  `, [id])
+
+  const isOwner = req.session.userId === rel.user_id
+
+  res.render("relationshipView", { rel, isOwner })
+})
+
+
+
+// create relationship
+app.post(
+  "/create-relationship",
+  upload.array("images", 3),
+  async (req, res) => {
+    try {
+      const {
+        name,
+        bio,
+        city,
+        sex,
+        looking_for,
+        age,
+        thought,
+        contact
+      } = req.body
+
+      const userId = req.session.userId
+      const postId = Date.now().toString()
+
+      // extract filenames safely
+      const files = req.files || []
+      const image1 = files[0]?.filename || null
+      const image2 = files[1]?.filename || null
+      const image3 = files[2]?.filename || null
+
+      // insert post
+      await db.query(
+        `INSERT INTO posts (id, user_id, type, title, content, location, contact)
+         VALUES (?, ?, 'relationship', ?, ?, ?, ?)`,
+        [
+          postId,
+          userId,
+          `Relationship: ${name}`,
+          bio,
+          city,
+          contact
+        ]
+      )
+
+      // insert relationship profile with images
+      await db.query(
+        `INSERT INTO relationship_profiles
+        (post_id, name, bio, city, sex, looking_for, age, thought, contact, image1, image2, image3)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          postId,
+          name,
+          bio,
+          city,
+          sex,
+          looking_for,
+          age,
+          thought,
+          contact,
+          image1,
+          image2,
+          image3
+        ]
+      )
+
+      res.redirect("/relationships")
+
+    } catch (err) {
+      console.error("Relationship insert error:", err)
+      res.send("Error creating relationship profile")
+    }
   }
+)
 
-  const savedItems = items.filter(item =>
-    currentUser.savedItems.includes(item.id)
+// edit relationship
+app.post("/relationships/edit/:id", async (req, res) => {
+  const { id } = req.params
+  const { bio, city, contact } = req.body
+
+  await db.query(`
+    UPDATE relationship_profiles
+    SET bio=?, city=?, contact=?
+    WHERE post_id=?
+  `, [bio, city, contact, id])
+
+  res.redirect("/relationships/" + id)
+})
+
+
+// delete relationhip
+app.post("/relationships/delete/:id", async (req, res) => {
+  const { id } = req.params
+
+  await db.query("DELETE FROM relationship_profiles WHERE post_id=?", [id])
+  await db.query("DELETE FROM posts WHERE id=?", [id])
+
+  res.redirect("/relationships")
+})
+
+
+//CLINIC REVIEWS
+
+// Get Clinic review form
+app.get("/reviews/new", (req, res) => {
+  res.render("clinicreviewForm")
+})
+
+
+// create reviews
+app.post("/reviews/create", requireLogin, async (req, res) => {
+  try {
+    const { clinic_name, rating, pros, cons, recommendation } = req.body
+
+    const postId = Date.now().toString()
+    const userId = req.session.userId
+
+    // base post
+    await db.query(
+      `INSERT INTO posts (id, user_id, type, title)
+       VALUES (?, ?, 'clinic_review', ?)`,
+      [postId, userId, clinic_name]
+    )
+
+    // clinic review WITH OWNER
+    await db.query(
+      `INSERT INTO clinic_reviews
+       (post_id, user_id, clinic_name, rating, pros, cons, recommendation)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [postId, userId, clinic_name, rating, pros, cons, recommendation]
+    )
+
+    res.redirect("/reviews/" + postId)
+
+  } catch (err) {
+    console.error("CREATE REVIEW ERROR:", err)
+    res.status(500).send("Error creating review")
+  }
+})
+
+
+//  show all reviews
+app.get("/reviews", async (req, res) => {
+  const [rows] = await db.query(`
+    SELECT p.id AS post_id, r.*
+    FROM posts p
+    JOIN clinic_reviews r ON p.id = r.post_id
+    ORDER BY p.created_at DESC
+  `)
+
+  res.render("showallreviews", { reviews: rows })
+})
+
+
+// single clinic review route
+app.get("/reviews/:id", requireLogin, async (req, res) => {
+  const { id } = req.params
+  const userId = req.session.userId
+
+  // review
+  const [[review]] = await db.query(
+    "SELECT * FROM clinic_reviews WHERE post_id=?",
+    [id]
   )
 
-  res.render("saved", { items: savedItems })
+  // comments + user names
+  const [comments] = await db.query(
+    `SELECT c.*, u.fname
+     FROM comments c
+     LEFT JOIN users u ON c.user_id = u.id
+     WHERE c.post_id=?
+     ORDER BY c.created_at DESC`,
+    [id]
+  )
+
+  // ⭐ review ownership
+  const isOwner = String(review.user_id) === String(userId)
+
+  // ⭐ comment ownership
+  const commentsWithOwner = comments.map(c => ({
+    ...c,
+    isOwner: String(c.user_id) === String(userId)
+  }))
+
+  res.render("singlereviewView", {
+    review,
+    comments: commentsWithOwner,
+    isOwner,   // 👈 REQUIRED for review buttons
+    userId
+  })
 })
+
+
+
+
+// EDIT COMMENT
+app.post("/reviews/comments/edit/:postId/:commentId", requireLogin, async (req, res) => {
+  const { postId, commentId } = req.params
+  const { content } = req.body
+
+  await db.query(
+    "UPDATE comments SET content=? WHERE id=? AND post_id=?",
+    [content, commentId, postId]
+  )
+
+  res.redirect("/reviews/" + postId)
+})
+
+
+// DELETE REVIEW COMMENT
+app.post("/reviews/comments/delete/:postId/:commentId", requireLogin, async (req, res) => {
+  const { postId, commentId } = req.params
+
+  await db.query(
+    "DELETE FROM comments WHERE id=? AND post_id=?",
+    [commentId, postId]
+  )
+
+  res.redirect("/reviews/" + postId)
+})
+
+//get edit clinic view
+
+app.get("/reviews/edit/:id", async (req, res) => {
+  const { id } = req.params
+
+  const [[review]] = await db.query(
+    `SELECT * FROM clinic_reviews WHERE post_id=?`,
+    [id]
+  )
+
+  res.render("reviewEdit", { review })
+})
+
+// post edit clinic view
+
+app.post("/reviews/edit/:id", async (req, res) => {
+  const { id } = req.params
+  const { rating, pros, cons, recommendation } = req.body
+
+  await db.query(
+    `UPDATE clinic_reviews
+     SET rating=?, pros=?, cons=?, recommendation=?
+     WHERE post_id=?`,
+    [rating, pros, cons, recommendation, id]
+  )
+
+  res.redirect("/reviews/" + id)
+})
+
+// delete clinic review
+app.post("/reviews/delete/:id", requireLogin, async (req,res)=>{
+  const { id } = req.params
+
+  await db.query(
+    "DELETE FROM clinic_reviews WHERE post_id=?",
+    [id]
+  )
+
+  res.redirect("/reviews")
+})
+
+
+
+
+// edit clinic review
+app.post("/reviews/edit/:id", requireLogin, async (req,res)=>{
+  const { id } = req.params
+  const { rating, pros, cons, recommendation } = req.body
+
+  await db.query(
+    `UPDATE clinic_reviews
+     SET rating=?, pros=?, cons=?, recommendation=?
+     WHERE post_id=?`,
+    [rating, pros, cons, recommendation, id]
+  )
+
+  res.redirect("/reviews/view/" + id)
+})
+
+
+
+app.post("/reviews/comments/add/:reviewId", requireLogin, async (req,res)=>{
+  const { reviewId } = req.params
+  const { content } = req.body
+  const userId = req.session.userId
+
+  await db.query(
+    `INSERT INTO comments (post_id, user_id, content)
+     VALUES (?, ?, ?)`,
+    [reviewId, userId, content]
+  )
+
+  res.redirect("/reviews/" + reviewId)
+
+})
+
+
+// ADMIN DASHBOARD
+app.get("/admin", requireAdmin, async (req, res) => {
+
+  const [[counts]] = await db.query(`
+    SELECT
+      (SELECT COUNT(*) FROM users) AS users,
+      (SELECT COUNT(*) FROM posts) AS posts,
+      (SELECT COUNT(*) FROM jobs) AS jobs,
+      (SELECT COUNT(*) FROM market_items) AS market,
+      (SELECT COUNT(*) FROM clinic_reviews) AS reviews
+  `)
+
+  res.render("admin/dashboard", { counts })
+})
+
+
+// manage users
+app.get("/admin/users", requireAdmin, async (req, res) => {
+  const [users] = await db.query(
+    "SELECT id, fname, lname, email, role FROM users ORDER BY created_at DESC"
+  )
+  res.render("admin/users", { users })
+})
+
+
+
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

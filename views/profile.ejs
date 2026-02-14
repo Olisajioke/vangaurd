@@ -1,0 +1,68 @@
+<%- include("partials/header") %>
+
+
+
+<div class="container mt-4">
+
+  <div class="profile-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="profile-sidebar">
+
+      <img src="/uploads/<%= user.profilepic %>" class="profile-avatar">
+
+      <h5><%= user.fname %> <%= user.lname %></h5>
+      <p class="text-muted"><%= user.location %></p>
+
+      <hr>
+
+      <a href="/profile" class="sidebar-link">Overview</a>
+      <a href="/relationships" class="sidebar-link">My Relationships</a>
+      <a href="/reviews" class="sidebar-link">My Reviews</a>
+      <a href="/market" class="sidebar-link">My Items</a>
+      <a href="/showjobs" class="sidebar-link">My Jobs</a>
+      <a href="/saved" class="sidebar-link">Saved</a>
+
+      <hr>
+      <form action="/logout" method="POST" class="mt-2">
+        <button class="btn btn-dark w-100">
+          Logout
+        </button>
+      </form>
+      <hr>
+
+      <button class="btn btn-outline-primary w-100 mb-2"
+              data-bs-toggle="modal"
+              data-bs-target="#editUserModal-<%= user.id %>">
+        Edit Profile
+      </button>
+
+      <button class="btn btn-outline-danger w-100"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteUserModal-<%= user.id %>">
+        Delete Account
+      </button>
+
+    </div>
+
+    <!-- RIGHT CONTENT -->
+    <div class="profile-content">
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h4>Your Activity</h4>
+          <p>Welcome back to your dashboard.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<%- include("partials/editUserModal", { user }) %>
+<%- include("partials/deleteUserModal", { user }) %>
+
+<%- include("partials/footer") %>

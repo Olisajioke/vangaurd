@@ -1,0 +1,158 @@
+<%- include("partials/header") %>
+
+<!-- HERO -->
+<div class="py-5 text-white"
+     style="background:
+       linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.6)),
+       url('/images/articles.jpg') center/cover no-repeat;">
+
+  <div class="container text-center">
+    <h1 class="display-4 fw-bold"><%= review.clinic_name %></h1>
+
+    <div class="fs-3 mt-2 text-warning">
+      <% for (let i = 1; i <= 5; i++) { %>
+        <% if (i <= review.rating) { %>
+          <i class="fa-solid fa-star"></i>
+        <% } else { %>
+          <i class="fa-regular fa-star"></i>
+        <% } %>
+      <% } %>
+    </div>
+
+    <div class="text-light mt-2">
+      Clinic Review
+    </div>
+  </div>
+</div>
+
+<div class="container py-5" style="max-width:900px;">
+
+  <!-- REVIEW BODY -->
+  <div class="row g-4 mb-4">
+
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold text-success mb-3">Pros</h5>
+          <div class="text-muted"><%- review.pros %></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold text-danger mb-3">Cons</h5>
+          <div class="text-muted"><%- review.cons %></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <h5 class="fw-bold mb-3">Recommendation</h5>
+      <div class="text-muted"><%- review.recommendation %></div>
+    </div>
+  </div>
+<hr>
+<br>
+  <% if (isOwner) { %>
+    <div class="text-end mb-4">
+      <button class="btn btn-outline-primary btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#editReviewModal">
+        Edit
+      </button>
+
+      <button class="btn btn-outline-danger btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteReviewModal">
+        Delete
+      </button>
+    </div>
+  <% } %>
+<hr>
+<br>
+  <!-- COMMENTS -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <h5 class="fw-bold mb-3">Comments</h5>
+
+      <% if (comments.length === 0) { %>
+        <div class="text-muted mb-3">No comments yet</div>
+      <% } %>
+
+      <% comments.forEach(c => { %>
+        <div class="d-flex align-items-start gap-2 border-bottom pb-3 mb-3">
+
+          <!-- Avatar -->
+          <div class="rounded-circle bg-primary text-white
+                      d-flex align-items-center justify-content-center"
+              style="width:32px;height:32px;font-size:14px;">
+            <%= (c.fname ? c.fname.charAt(0) : '?').toUpperCase() %>
+          </div>
+
+          <div class="flex-grow-1">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="fw-semibold">
+                <%= c.fname || "User" %>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+
+                <div class="text-muted small">
+                  <%= new Date(c.created_at).toLocaleDateString() %>
+                </div>
+               <% if (c.isOwner) { %>
+                  <button class="btn btn-sm btn-outline-primary"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editCommentModal-<%= c.id %>">
+                    Edit
+                  </button>
+
+                  <button class="btn btn-sm btn-outline-danger"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteCommentModal-<%= c.id %>">
+                    Delete
+                  </button>
+                <% } %>
+
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="text-muted mt-1">
+              <%= c.content %>
+            </div>
+
+          </div>
+        </div>
+      <% }) %>
+
+      <form action="/reviews/comments/add/<%= review.post_id %>" method="POST">
+        <div class="input-group">
+          <input type="text" name="content" class="form-control" placeholder="Add a comment..." required>
+          <button class="btn btn-primary">Post</button>
+        </div>
+      </form>
+
+    </div>
+   </div>
+
+   
+  </div>
+
+</div>
+
+
+<%- include("partials/editreviewModal") %>
+<%- include("partials/deletereviewModal") %>
+<%- include("partials/editReviewCommentModal", { comments, review }) %>
+<%- include("partials/deleteReviewCommentModal", { comments, review }) %>
+<%- include("partials/footer") %>

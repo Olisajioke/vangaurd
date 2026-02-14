@@ -1,25 +1,44 @@
 <%- include('partials/header') %>
 
 <!-- HERO / JUMBOTRON -->
-<div
-  class="jumbotron text-dark bg-light text-center"
-  style="
-    background-image: url('<%= post.image ? "/uploads/" + post.image : "/images/default_bg.jpg" %>');
-    background-size: cover;
-    background-position: center;
-    padding: 5rem 2rem;
-  "
->
-  <h1 class="display-4"><%= post.title %></h1>
-  <p class="lead"><%= post.subtitle %></p>
 
-  <hr class="my-4 bg-light">
+<div class="jumbotron text-center text-white position-relative overflow-hidden" style="padding:5rem 2rem;">
 
-  <p class="mb-1">by</p>
-  <a href="#" class="btn btn-primary btn-lg mb-2" role="button">
-    <%= post.author %>
-  </a>
-  <p class="text-muted">on <%= post.date %></p>
+  <!-- Background image -->
+  <div
+    class="position-absolute w-100 h-100"
+    style="
+      top:0;
+      left:0;
+      background-image: url('<%= post.image1 ? "/uploads/" + post.image1 : "/images/default_bg.jpg" %>');
+      background-size: cover;
+      background-position: center;
+      filter: blur(6px);
+      transform: scale(1.1);
+      z-index: 1;
+    "
+  ></div>
+
+  <!-- Dark overlay -->
+  <div
+    class="position-absolute w-100 h-100"
+    style="
+      top:0;
+      left:0;
+      background: rgba(0,0,0,0.45);
+      z-index: 2;
+    "></div>
+
+  <!-- Content -->
+  <div class="position-relative" style="z-index:3;">
+    <h1 class="display-4"><%= post.title %></h1>
+    <p class="lead"><%= post.subtitle %></p>
+    <p>By <strong><%= post.fname %></strong></p>
+     <p class="text-muted">on 
+    <%= new Date(post.created_at).toLocaleDateString() %>
+  </p>
+  </div>
+
 </div>
 
 <!-- POST CONTENT -->

@@ -1,0 +1,57 @@
+<div class="modal fade" id="editReviewModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <form action="/reviews/edit/<%= review.post_id %>" method="POST">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Review</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <input name="rating"
+                   class="form-control"
+                   value="<%= review.rating %>">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Pros</label>
+            <textarea name="pros"
+                      id="editPros"
+                      class="form-control"
+                      rows="4"><%- review.pros %></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Cons</label>
+            <textarea name="cons"
+                      id="editCons"
+                      class="form-control"
+                      rows="4"><%- review.cons %></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Recommendation</label>
+            <textarea name="recommendation"
+                      id="editRec"
+                      class="form-control"
+                      rows="3"><%- review.recommendation %></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            Save Changes
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>

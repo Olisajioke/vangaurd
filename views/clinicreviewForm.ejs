@@ -1,0 +1,88 @@
+<%- include("partials/header") %>
+
+<!-- HERO / JUMBOTRON -->
+<div class="py-5 border-bottom" style="background: url('../images/articles.jpg')">
+  <div class="container text-center">
+    <h1 class="display-4 fw-bold">Write Clinic Review</h1>
+    <p class="lead text-muted">
+      Share your experience with fellow optometrists
+    </p>
+  </div>
+</div>
+
+<!-- FORM SECTION -->
+<div class="container py-5" style="max-width: 750px;">
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+
+      <form action="/reviews/create" method="POST">
+
+        <!-- Clinic Name -->
+        <div class="form-floating mb-3">
+          <input type="text"
+                 class="form-control"
+                 name="clinic_name"
+                 placeholder="Clinic Name"
+                 required>
+          <label>Clinic Name</label>
+        </div>
+
+        <!-- Rating -->
+        <div class="form-floating mb-4">
+          <input type="number"
+                 class="form-control"
+                 name="rating"
+                 min="1"
+                 max="5"
+                 placeholder="Rating">
+          <label>Rating (1–5)</label>
+        </div>
+
+        <!-- Pros -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Pros</label>
+          <textarea class="form-control"
+                    name="pros"
+                    rows="3"
+                    placeholder="What was good?"></textarea>
+        </div>
+
+        <!-- Cons -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Cons</label>
+          <textarea class="form-control"
+                    name="cons"
+                    rows="3"
+                    placeholder="What could be improved?"></textarea>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Recommendation</label>
+          <textarea class="form-control"
+                    name="recommendation"
+                    rows="4"
+                    placeholder="Would you recommend this clinic? Why?"></textarea>
+        </div>
+
+        <div class="text-center">
+          <button class="btn btn-success px-4 py-2">
+            Publish Review
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
+<script>
+  CKEDITOR.replace("editPros")
+  CKEDITOR.replace("editCons")
+  CKEDITOR.replace("editRec")
+</script>
+
+<%- include("partials/footer") %>

@@ -1,0 +1,39 @@
+<%- include("../partials/header") %>
+
+<div class="container py-4">
+  <h2 class="mb-4">Admin Dashboard</h2>
+
+  <div class="row g-4">
+
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 text-center">
+        <h4><%= counts.users %></h4>
+        <div>Users</div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 text-center">
+        <h4><%= counts.posts %></h4>
+        <div>Articles</div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 text-center">
+        <h4><%= counts.jobs %></h4>
+        <div>Jobs</div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm p-3 text-center">
+        <h4><%= counts.market %></h4>
+        <div>Market Items</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

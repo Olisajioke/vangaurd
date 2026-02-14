@@ -1,0 +1,90 @@
+<%- include("partials/header") %>
+
+
+<div class="container mt-4">
+
+  <!-- HERO -->
+  <div class="rel-hero">
+    <h2 class="mb-2">Find Meaningful Connection</h2>
+    <p class="mb-0">Share who you are and what you're looking for within the optometry community</p>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="card rel-card">
+    <div class="card-body">
+
+      <form action="/create-relationship" method="POST" enctype="multipart/form-data">
+
+        <!-- Name -->
+        <div class="form-floating mb-3">
+          <input type="text" name="name" class="form-control" placeholder="Name" required>
+          <label>Your Name</label>
+        </div>
+
+        <!-- Bio -->
+        <div class="form-floating mb-3">
+          <textarea name="bio" class="form-control" style="height:100px" placeholder="Bio"></textarea>
+          <label>Short Bio</label>
+        </div>
+
+        <!-- City -->
+        <div class="form-floating mb-3">
+          <input type="text" name="city" class="form-control" placeholder="City">
+          <label>City in KSA</label>
+        </div>
+
+        <!-- Sex -->
+        <div class="form-floating mb-3">
+          <select name="sex" class="form-select">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+          <label>Sex</label>
+        </div>
+
+        <!-- Looking For -->
+        <div class="form-floating mb-3">
+          <select name="looking_for" class="form-select">
+            <option value="">Select</option>
+            <option>Relationship</option>
+            <option>Marriage</option>
+          </select>
+          <label>Looking For</label>
+        </div>
+
+        <!-- Age -->
+        <div class="form-floating mb-3">
+          <input type="number" name="age" class="form-control" placeholder="Age">
+          <label>Age</label>
+        </div>
+
+        <!-- Thought -->
+        <div class="form-floating mb-3">
+          <textarea name="thought" class="form-control" style="height:100px" placeholder="Thought"></textarea>
+          <label>Personal Thought</label>
+        </div>
+
+        <!-- Contact -->
+        <div class="form-floating mb-4">
+          <input type="text" name="contact" class="form-control" placeholder="Contact">
+          <label>Contact (WhatsApp / Email)</label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Upload up to 3 photos</label>
+            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+        </div>
+
+
+        <button class="btn btn-danger w-100 btn-lg">
+          Create Relationship Profile
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<%- include("partials/footer") %>

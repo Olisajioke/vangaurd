@@ -42,17 +42,10 @@
           <label for="image">Upload Image</label>
           <input type="file" name="image" id="image" accept="image/*" class="form-control">
           
-          <% if (isEdit && post.image) { %>
+          <% if (isEdit && post.image1) { %>
             <p class="mt-2">Current image:</p>
-            <img src="/uploads/<%= post.image %>" alt="Post Image" style="max-width: 200px; display:block;">
+            <img src="/uploads/<%= post.image1 %>" alt="Post Image" style="max-width: 200px; display:block;">
           <% } %>
-        </div>
-
-        <!-- AUTHOR -->
-        <div class="form-group">
-          <label for="author">Author Name</label>
-          <input type="text" name="author" id="author" class="form-control" required placeholder="WRITE ANNONYMOUS IF PREFERRED"
-                 value="<%= isEdit ? post.author : "" %>" <%= isEdit ? "readonly" : "" %>>
         </div>
 
         <!-- CONTENT -->

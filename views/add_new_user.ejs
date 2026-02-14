@@ -1,71 +1,84 @@
 <%- include("partials/header.ejs") %>
 
-<!-- Jumbotron -->
-<div class="jumbotron jumbotron-fluid text-center text-black" style="background-image: url('/images/articles_imsu.jpg'); background-size: cover; background-position: center; padding: 5rem 2rem;">
-  <div class="container mt-4">
-    <h1 class="display-4 ">REGISTER BELOW!</h1>
-    <p class="lead">Join us today and become part of our community!</p>
+<!-- HERO -->
+<div class="jumbotron text-center text-white"
+     style="background: linear-gradient(135deg,#4facfe,#00f2fe); padding:4rem 2rem;">
+  <div class="container">
+    <h1 class="display-5">Join Vanguard Optometry Network</h1>
+    <p class="lead mb-0">A private professional community for optometrists in KSA</p>
   </div>
 </div>
 
-<!-- Registration Form -->
+<!-- REGISTRATION -->
 <div class="container my-5">
-  <form action="/add_new_user" method="POST" enctype="multipart/form-data" class="mx-auto p-4" style="max-width: 500px; background: #fff; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.1);">
-    
-    <h2 class="text-center mb-4">Create Account</h2>
+  <form action="/add_new_user"
+        method="POST"
+        enctype="multipart/form-data"
+        class="mx-auto p-4"
+        style="max-width:520px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.08);">
 
-    <!-- First Name -->
+    <h3 class="text-center mb-4">Create Account</h3>
+
+    <!-- FIRST -->
     <div class="form-floating mb-3">
-      <input type="text" class="form-control" id="fName" name="fName" placeholder="First Name" required>
-      <label for="fName">First Name</label>
+      <input type="text" class="form-control" name="fName" placeholder="First Name" required>
+      <label>First Name</label>
     </div>
 
-    <!-- Last Name -->
+    <!-- LAST -->
     <div class="form-floating mb-3">
-      <label for="lName">Last Name</label>
-      <input type="text" class="form-control" id="lName" name="lName" placeholder="Last Name" required>
+      <input type="text" class="form-control" name="lName" placeholder="Last Name" required>
+      <label>Last Name</label>
     </div>
 
-    <!-- Location -->
+    <!-- LOCATION -->
     <div class="form-floating mb-3">
-      <label for="location">Location</label>
-      <input type="text" class="form-control" id="location" name="location" placeholder="Location Within the Kingdom" required>
+      <input type="text" class="form-control" name="location" placeholder="City in KSA" required>
+      <label>Location in KSA</label>
     </div>
 
-    <!-- Email -->
+    <!-- EMAIL -->
     <div class="form-floating mb-3">
-      <label for="email">Email Address</label>
-      <input type="email" class="form-control" id="email" name="email" placeholder="Email Address" required>
+      <input type="email" class="form-control" name="email" placeholder="Email" required>
+      <label>Email</label>
     </div>
 
-    <!-- Password 1-->
-    <div class="form-floating mb-3">
-      <label for="password">Password</label>
-      <input type="password" class="form-control" id="password1" name="password1" placeholder="  Enter Password" required>
-    </div>
+    <!-- PASSWORD -->
+      <div class="form-floating mb-3">
+        <input type="password" class="form-control" name="password" placeholder="Password" required>
+        <label>Password</label>
+      </div>
 
-    <!-- Password 2-->
-    <div class="form-floating mb-3">
-      <label for="password">Confirm Password</label>
-      <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirm Password" required>
-    </div>
+      <div class="form-floating mb-3">
+        <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" required>
+        <label>Confirm Password</label>
+      </div>
 
-    <!-- Vanguard Code -->
-    <div class="form-floating mb-3">
-      <label for="vanguard">Vanguard Code</label>
-      <input type="password" class="form-control" id="vanguard" name="vanguard" placeholder="Check the Whatsapp Group for this code" required>
-    </div>
 
-    <!-- Profile Picture -->
+    <!-- VANGUARD CODE -->
+    <div class="form-floating mb-3">
+      <input type="text"
+             class="form-control border-primary"
+             name="vanguard"
+             placeholder="Vanguard Code"
+             required>
+      <label class="text-primary">Vanguard Access Code</label>
+    </div>
+    <small class="text-muted d-block mb-3">
+      This private community requires a valid Vanguard code to register.
+    </small>
+
+    <!-- PROFILE PIC -->
     <div class="mb-3">
-      <label for="profilepic" class="form-label">Upload Profile Picture</label>
-      <input class="form-control" type="file" id="profilepic" name="profilepic" accept="image/*">
+      <label class="form-label">Profile Picture</label>
+      <input type="file" name="profilepic" class="form-control" accept="image/*">
     </div>
 
-    <!-- Submit Button -->
-    <button type="submit" class="btn btn-primary btn-lg w-100">Register</button>
+    <button class="btn btn-primary w-100 btn-lg">
+      Register
+    </button>
 
   </form>
 </div>
 
-<%- include('partials/footer') %>
+<%- include("partials/footer") %>

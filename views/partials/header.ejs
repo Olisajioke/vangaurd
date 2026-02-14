@@ -21,11 +21,10 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
   <div class="container-fluid px-5">
-
-    <!-- Brand -->
+    <!-- BRAND -->
     <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/">
       <svg xmlns="http://www.w3.org/2000/svg"
-           width="34" height="34"
+           width="32" height="32"
            fill="currentColor"
            class="bi bi-eyeglasses"
            viewBox="0 0 16 16">
@@ -34,7 +33,7 @@
       OptVanguards
     </a>
 
-    <!-- Hamburger -->
+    <!-- HAMBURGER -->
     <button class="navbar-toggler"
             type="button"
             data-bs-toggle="collapse"
@@ -45,37 +44,58 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Collapsible Area -->
+    <!-- COLLAPSIBLE AREA -->
     <div class="collapse navbar-collapse" id="navbarContent">
 
-      <!-- LEFT CLUSTER -->
-      <ul class="navbar-nav ms-3 mb-2 mb-lg-0">
+      <!-- LEFT NAV -->
+      <ul class="navbar-nav ms-lg-3 mb-2 mb-lg-0">
 
-        <li class="nav-item">
-          <a class="nav-link active d-flex align-items-center gap-2" href="/showjobs">
-            <i class="fas fa-briefcase"></i>
-            Jobs
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link d-flex align-items-center gap-2" href="/articles">
-            <i class="fas fa-book-medical"></i>
-            Articles
-          </a>
-        </li>
-
+        <!-- PROFESSIONAL -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-             href="/articles"
+             href="#"
              role="button"
-             data-bs-toggle="dropdown"
-             aria-expanded="false">
+             data-bs-toggle="dropdown">
+            <i class="fas fa-user-md text-primary"></i>
+            Professional
+          </a>
+
+          <ul class="dropdown-menu shadow border-0 mt-2 p-2">
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="<%= userId ? '/showjobs' : '/login' %>">
+                <i class="fas fa-briefcase text-success"></i>
+                Jobs
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="<%= userId ? '/articles' : '/login' %>">
+                <i class="fas fa-book-medical text-info"></i>
+                Articles
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="<%= userId ? '/reviews' : '/login' %>">
+                <i class="fas fa-hospital text-danger"></i>
+                Clinic Reviews
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- RESOURCES -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+             href="#"
+             role="button"
+             data-bs-toggle="dropdown">
             <i class="fas fa-layer-group"></i>
             Resources
           </a>
 
-          <ul class="dropdown-menu shadow border-0 mt-2">
+          <ul class="dropdown-menu shadow border-0 mt-2 p-2">
             <li>
               <a class="dropdown-item d-flex align-items-center gap-2" href="#">
                 <i class="fas fa-language text-primary"></i>
@@ -98,41 +118,83 @@
           </ul>
         </li>
 
+        <!-- MARKET -->
         <li class="nav-item">
-          <a class="nav-link d-flex align-items-center gap-2" href="/market">
+          <a class="nav-link d-flex align-items-center gap-2"
+             href="<%= userId ? '/market' : '/login' %>">
             <i class="fa-solid fa-store"></i>
             Market
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link d-flex align-items-center gap-2" href="/user", { id }>
-            <i class="fa-solid fa-user-doctor"></i>
-            Profile
-          </a>
-        </li>
-        <%
-          const currentUser = db?.users?.[0];
-          const savedCount = currentUser?.savedItems?.length || 0;
-        %>
 
-        <a href="/saved" class="nav-link">
-          ❤️ Saved (<%= savedCount %>)
-        </a>
       </ul>
 
-      <!-- RIGHT SIDE -->
-      <form class="d-flex ms-auto" role="search">
-        <input class="form-control me-2"
-               type="search"
-               placeholder="Search Reviews">
-        <button class="btn-success btn-outline-success" type="submit">
-          Check
-        </button>
-      </form>
+        <!-- RIGHT NAV -->
+<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
-    </div>
+  <% if (userId) { %>
+
+  <!-- USER DROPDOWN -->
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+       href="#"
+       role="button"
+       data-bs-toggle="dropdown">
+      <i class="fa-solid fa-user-circle text-primary"></i>
+      <span class="fw-semibold"><%= userName %></span>
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2">
+      <li>
+        <a class="dropdown-item d-flex align-items-center gap-2" href="/profile">
+          <i class="fa-solid fa-user"></i>
+          My Profile
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item d-flex align-items-center gap-2" href="/saved">
+          <i class="fa-solid fa-heart text-danger"></i>
+          Saved Items
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <form action="/logout" method="POST">
+          <button class="dropdown-item d-flex align-items-center gap-2 text-danger">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Logout
+          </button>
+        </form>
+      </li>
+    </ul>
+  </li>
+
+  <!-- ADMIN PANEL (aligned now) -->
+    <% if (userRole === 'admin') { %>
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2"
+          href="/admin">
+          <i class="fa-solid fa-shield-halved text-warning"></i>
+          Admin Panel
+        </a>
+      </li>
+    <% } %>
+
+    <% } else { %>
+
+      <!-- LOGIN -->
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2"
+          href="/login">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Login
+        </a>
+      </li>
+
+    <% } %>
+
+    </ul>
   </div>
 </nav>
-
 <main>
 
