@@ -1,58 +1,147 @@
 <%- include("partials/header") %>
 
+<div class="container py-4" style="max-width:1200px;">
 
+  <div class="row g-4">
 
-<div class="container mt-4">
+    <!-- SIDEBAR -->
+    <div class="col-lg-3">
 
-  <div class="profile-layout">
+      <div class="card border-0 shadow-sm text-center p-4">
 
-    <!-- LEFT SIDEBAR -->
-    <div class="profile-sidebar">
+        <img src="/uploads/<%= user.profilepic || 'default.png' %>"
+             class="rounded-circle mb-3 mx-auto"
+             style="width:110px;height:110px;object-fit:cover;">
 
-      <img src="/uploads/<%= user.profilepic %>" class="profile-avatar">
+        <h5 class="fw-semibold mb-0">
+          <%= user.fname %> <%= user.lname %>
+        </h5>
 
-      <h5><%= user.fname %> <%= user.lname %></h5>
-      <p class="text-muted"><%= user.location %></p>
+        <div class="text-muted small mb-2">
+          <%= user.role || "Optometrist" %>
+        </div>
 
-      <hr>
+        <div class="text-muted small mb-3">
+          <i class="fas fa-map-marker-alt me-1"></i>
+          <%= user.location || "—" %>
+        </div>
 
-      <a href="/profile" class="sidebar-link">Overview</a>
-      <a href="/relationships" class="sidebar-link">My Relationships</a>
-      <a href="/reviews" class="sidebar-link">My Reviews</a>
-      <a href="/market" class="sidebar-link">My Items</a>
-      <a href="/articles" class="sidebar-link">My Articles</a>
-      <a href="/showjobs" class="sidebar-link">My Jobs</a>
-      <a href="/saved" class="sidebar-link">Saved</a>
+        <hr class="my-3">
 
-      <hr>
-      <form action="/logout" method="POST" class="mt-2">
-        <button class="btn btn-dark w-100">
-          Logout
+        <!-- NAV -->
+        <div class="list-group list-group-flush text-start">
+
+          <a href="/profile" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-user me-2 text-success"></i>Overview
+          </a>
+
+          <a href="/patients" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-users me-2 text-success"></i>Patient Records
+          </a>
+
+          <a href="/relationships" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-network-wired me-2 text-success"></i>Relationships
+          </a>
+
+          <a href="/reviews" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-star me-2 text-success"></i>Reviews
+          </a>
+
+          <a href="/market" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-box me-2 text-success"></i>My Items
+          </a>
+
+          <a href="/articles" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-newspaper me-2 text-success"></i>Articles
+          </a>
+
+          <a href="/showjobs" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-briefcase me-2 text-success"></i>Jobs
+          </a>
+
+          <a href="/saved" class="list-group-item list-group-item-action border-0">
+            <i class="fas fa-bookmark me-2 text-success"></i>Saved
+          </a>
+
+        </div>
+
+        <hr class="my-3">
+
+        <button class="btn btn-outline-primary w-100 mb-2"
+                data-bs-toggle="modal"
+                data-bs-target="#editUserModal-<%= user.id %>">
+          Edit Profile
         </button>
-      </form>
-      <hr>
 
-      <button class="btn btn-outline-primary w-100 mb-2"
-              data-bs-toggle="modal"
-              data-bs-target="#editUserModal-<%= user.id %>">
-        Edit Profile
-      </button>
+        <button class="btn btn-outline-danger w-100 mb-3"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteUserModal-<%= user.id %>">
+          Delete Account
+        </button>
 
-      <button class="btn btn-outline-danger w-100"
-              data-bs-toggle="modal"
-              data-bs-target="#deleteUserModal-<%= user.id %>">
-        Delete Account
-      </button>
+        <form action="/logout" method="POST">
+          <button class="btn btn-dark w-100">
+            Logout
+          </button>
+        </form>
+
+      </div>
 
     </div>
 
-    <!-- RIGHT CONTENT -->
-    <div class="profile-content">
+    <!-- CONTENT -->
+    <div class="col-lg-9">
 
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <h4>Your Activity</h4>
-          <p>Welcome back to your dashboard.</p>
+      <!-- STATS -->
+      <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fs-4 fw-bold text-success">
+              <%= stats.posts %>
+            </div>
+            <div class="small text-muted">Posts</div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fs-4 fw-bold text-success">
+              <%= stats.relationships %>
+            </div>
+            <div class="small text-muted">Relationships</div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fs-4 fw-bold text-success">
+              <%= stats.articles %>
+            </div>
+            <div class="small text-muted">Articles</div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fs-4 fw-bold text-success">
+              <%= stats.saved %>
+            </div>
+            <div class="small text-muted">Saved</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- WELCOME -->
+      <div class="card border-0 shadow-sm p-4">
+        <h4 class="fw-semibold mb-2">
+          Welcome back, <%= user.fname %>
+        </h4>
+
+        <div class="text-muted">
+          This is your professional dashboard. Access your patients,
+          content, and activity from the left panel.
         </div>
       </div>
 
@@ -62,8 +151,6 @@
 
 </div>
 
-
 <%- include("partials/editUserModal", { user }) %>
 <%- include("partials/deleteUserModal", { user }) %>
-
 <%- include("partials/footer") %>

@@ -229,4 +229,32 @@ body {
   border-radius: 16px;
 }
 
+.hero-market {
+      position: relative;
+      background: url('../images/article_osaf.png') center/cover no-repeat;
+      overflow: hidden;
+    }
 
+    .hero-market::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: inherit;
+      filter: blur(8px);
+      transform: scale(1.05);
+      z-index: 0;
+    }
+
+    .hero-market::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 0;
+    }
+
+    .hero-market .container {
+      position: relative;
+      z-index: 1;
+    }
+  

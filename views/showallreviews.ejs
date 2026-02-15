@@ -13,33 +13,45 @@
 </section>
 
 <div class="container my-5">
-  <div class="row g-4">
+  <div class="row mb-2">
     <% reviews.forEach(r => { %>
-      <div class="col-md-6 col-lg-4">
-        <div class="flip-card">
-          <div class="flip-card-inner">
+      <div class="col-md-6">
+        <div class="row g-0 border rounded overflow-hidden mb-4 shadow-sm h-100">
 
-            <!-- Front -->
-            <div class="flip-card-front card shadow-sm h-100">
-              <div class="card-body">
-                <h5 class="card-title mb-2"><%= r.clinic_name %></h5>
-                <p class="card-text">Rating: ⭐ <%= r.rating %></p>
-                 <p class="card-text">
-                    Reviewed on: 
-                    <%= r.created_at ? new Date(r.created_at).toLocaleDateString() : "N/A" %>
-                  </p>
-              </div>
+          <!-- Text -->
+          <div class="col p-4 d-flex flex-column">
+            <strong class="d-inline-block mb-2 text-success-emphasis">
+              Rating: ⭐ <%= r.rating %>
+            </strong>
+
+            <h3 class="mb-0"><%= r.clinic_name %></h3>
+
+            <div class="mb-1 text-body-secondary">
+              <%= r.created_at 
+                    ? new Date(r.created_at).toLocaleDateString("en-GB") 
+                    : "" %>
             </div>
 
-            <!-- Back -->
-            <div class="flip-card-back card text-center text-white bg-success h-100">
-              <div class="card-body d-flex flex-column justify-content-center">
-                <h5 class="mb-3">See full review</h5>
-                <a href="/reviews/<%= r.post_id %>" class="btn btn-light">View Review</a>
-              </div>
-            </div>
+            <p class="card-text mb-auto">
+              <%= r.recommendation 
+                    ? r.recommendation.substring(0, 120) + "..." 
+                    : "No review text available." %>
+            </p>
 
+            <a href="/reviews/<%= r.post_id %>"
+              class="icon-link gap-1 icon-link-hover stretched-link">
+              Continue reading
+            </a>
           </div>
+
+          <!-- Image -->
+          <div class="col-4 col-md-3 col-lg-4">
+            <img src="<%= r.image_url || '/images/write.jpg' %>" 
+                alt="Clinic image"
+                class="img-fluid h-100 w-100"
+                style="object-fit:cover;">
+          </div>
+
         </div>
       </div>
     <% }) %>
@@ -91,6 +103,10 @@
 .flip-card-back {
   transform: rotateY(180deg);
 }
+.border {
+  border-color: rgba(201,162,39,.4) !important;
+}
+
 </style>
 
 <%- include("partials/footer") %>

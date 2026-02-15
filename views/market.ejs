@@ -1,108 +1,106 @@
-<%- include("partials/header")  %>
+<%- include("partials/header") %>
 
-<div class="container mt-4">
-  <h2 class="mb-3">WELCOME TO THE MINI MARKET</h2>
-
-  <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createItemModal">
-    + Post Item
-  </button>
-
-  <% if (!items || items.length === 0) { %>
-    <p>No Item available for sale. Create one</p>
-  <% } %>
-
-  <div class="row">
-    <% items.forEach(item => { %>
-      <div class="col-12 mb-3">
-        <div class="card shadow-sm">
-          <div class="row g-0">
-
-            <!-- LEFT: IMAGE CAROUSEL -->
-            <div class="col-md-4">
-              <% if (item.images && item.images.length > 0) { %>
-                <div id="carousel-<%= item.id %>" class="carousel slide h-100">
-                  <div class="carousel-inner h-100">
-
-                    <% item.images.forEach((img, index) => { %>
-                      <div class="carousel-item <%= index === 0 ? 'active' : '' %> h-100">
-                        <img src="/uploads/<%= img %>"
-                             class="d-block w-100 h-100"
-                             style="object-fit: cover;">
-                      </div>
-                    <% }) %>
-
-                  </div>
-
-                  <% if (item.images.length > 1) { %>
-                    <button class="carousel-control-prev" type="button"
-                            data-bs-target="#carousel-<%= item.id %>" data-bs-slide="prev">
-                      <span class="carousel-control-prev-icon"></span>
-                    </button>
-
-                    <button class="carousel-control-next" type="button"
-                            data-bs-target="#carousel-<%= item.id %>" data-bs-slide="next">
-                      <span class="carousel-control-next-icon"></span>
-                    </button>
-                  <% } %>
-                </div>
-              <% } else { %>
-                <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                  <span class="text-muted">No Image</span>
-                </div>
-              <% } %>
-            </div>
-
-            <!-- RIGHT: DETAILS -->
-            <div class="col-md-8">
-              <div class="card-body">
-                <h4 class="card-title"><%= item.title %> For Sale</h4>
-
-                <p class="mb-1"><strong>Price:</strong> ر.س <%= item.price %></p>
-                <p class="mb-1"><strong>Seller:</strong> <%= item.seller %></p>
-                <p class="mb-1"><strong>Contact:</strong> <%= item.contact %></p>
-                <p class="mb-2"><%= item.description %></p>
-
-                <a href="/item/<%= item.id %>" class="btn btn-outline-secondary btn-sm">View</a>
-
-                 <%
-                    const currentUser = db?.users?.[0];
-                    const isSaved = currentUser?.savedItems?.includes(item.id) || false;
-                 %>
-
-                <form action="/toggle-save/<%= item.id %>" method="POST" class="d-inline">
-                    <button class="btn btn-link p-0 border-0">
-                        <% if (isSaved) { %>
-                            ❤️
-                        <% } else { %>
-                            🤍
-                        <% } %>
-                    </button>
-                </form>
-
-                <button class="btn btn-primary btn-sm"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editItemModal-<%= item.id %>">
-                  Edit
-                </button>
-
-                <button class="btn btn-danger btn-sm"
-                        data-bs-toggle="modal"
-                        data-bs-target="#deleteItemModal-<%= item.id %>">
-                  Delete
-                </button>
-              </div>
-            </div>
-
-          </div>
+<main>
+  <!-- HERO / INTRO -->
+  <section class="py-5 text-center text-white hero-market">
+    <div class="container position-relative">
+      <div class="row py-lg-5">
+        <div class="col-lg-6 col-md-8 mx-auto">
+          <h1 class="fw-light">Mini Market</h1>
+          <p class="lead fw-normal text-white-75">
+            Buy and sell items within the community. Tap any item to see full details and more photos.
+          </p>
+          <p>
+            <button class="btn btn-success my-2" data-bs-toggle="modal" data-bs-target="#createItemModal">
+              + Post Item
+            </button>
+          </p>
         </div>
       </div>
+    </div>
+  </section>
 
-      <%- include("partials/editItemModal", { item }) %>
-      <%- include("partials/deleteItemModal", { item }) %>
 
-    <% }) %>
+  <!-- GRID -->
+  <div class="album py-5 bg-body-tertiary">
+    <div class="container">
+
+      <% if (!items || items.length === 0) { %>
+        <p class="text-center">No items available yet. Be the first to post 🎉</p>
+      <% } %>
+
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+        <% items.forEach(item => { %>
+          <div class="col">
+            <div class="card shadow-sm h-100">
+
+              <!-- SINGLE THUMBNAIL ONLY -->
+                <%
+                  const firstImage = item.image1 || item.image2 || item.image3;
+                %>
+
+                <% if (firstImage) { %>
+                  <img src="/uploads/<%= firstImage %>"
+                      class="card-img-top"
+                      style="height:225px; object-fit:cover;">
+                <% } else { %>
+                  <div class="d-flex align-items-center justify-content-center bg-light"
+                      style="height:225px;">
+                    <span class="text-muted">No Image</span>
+                  </div>
+                <% } %>
+
+
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title"><%= item.title %></h5>
+                <p class="card-text text-truncate"><%= item.description %></p>
+
+                <div class="mt-auto d-flex justify-content-between align-items-center">
+                  <div class="btn-group">
+                    <a href="/item/<%= item.id %>" class="btn btn-sm btn-outline-secondary">
+                      View
+                    </a>
+
+                    <button class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editItemModal-<%= item.id %>">
+                      Edit
+                    </button>
+
+                    <button class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteItemModal-<%= item.id %>">
+                      Delete
+                    </button>
+                  </div>
+
+                  <small class="text-body-secondary">ر.س <%= item.price %></small>
+                </div>
+              </div>
+
+              <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                <span class="text-muted small"><%= item.seller %></span>
+
+                <% 
+                  const currentUser = db?.users?.[0];
+                  const isSaved = currentUser?.savedItems?.includes(item.id) || false;
+                %>
+                <form action="/toggle-save/<%= item.id %>" method="POST">
+                  <button class="btn btn-link p-0 border-0" title="Save">
+                    <% if (isSaved) { %>❤️<% } else { %>🤍<% } %>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <%- include("partials/editItemModal", { item }) %>
+          <%- include("partials/deleteItemModal", { item }) %>
+        <% }) %>
+      </div>
+    </div>
   </div>
-</div>
+</main>
 
 <%- include("partials/createItemModal") %>
 <%- include("partials/footer") %>

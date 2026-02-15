@@ -214,7 +214,7 @@ app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
 
 
 // user page
-app.get("/user/:id", (req, res) => {
+app.get("/user/:id", requireLogin, (req, res) => {
   const { id } = req.params
   const user = user_db.find(u => u.id === id)
 
@@ -274,7 +274,7 @@ app.post("/login", async (req, res) => {
 
 
 // delete user  
-app.post("/user/delete/:id", async (req, res) => {
+app.post("/user/delete/:id", requireLogin, async (req, res) => {
   const { id } = req.params
 
   await db.query("DELETE FROM users WHERE id=?", [id])
@@ -364,7 +364,7 @@ app.get("/profile", requireLogin, async (req, res) => {
 
 
 // EDIT USER WITH DB
-app.put("/edituser/:id", upload.single("profilepic"), async (req, res) => {
+app.put("/edituser/:id", requireLogin, upload.single("profilepic"), async (req, res) => {
   try {
     const userId = req.params.id
     const { fName, lName, email, location, password, removePhoto } = req.body
@@ -432,22 +432,18 @@ app.put("/edituser/:id", upload.single("profilepic"), async (req, res) => {
 })
 
 // DELETE USER
-app.delete("/deleteuser/:id", (req, res) => {
+app.delete("/deleteuser/:id", requireLogin, async (req, res) => {
   const { id } = req.params
 
-  const index = user_db.findIndex(u => u.id === id)
+  await db.query("DELETE FROM users WHERE id=?", [id])
 
-  if (index === -1) {
-    return res.status(404).send("User not found")
-  }
-
-  user_db.splice(index, 1)
-
-  res.redirect("/")
+  req.session.destroy(() => {
+    res.redirect("/")
+  })
 })
 
 // Logout route
-app.post("/logout", (req, res) => {
+app.post("/logout", requireLogin, (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login")
   })
@@ -796,7 +792,7 @@ app.get("/item/:id", requireLogin, async (req, res) => {
 
 
 // create item for sale
-app.post("/createitem", upload.array("images", 3), async (req, res) => {
+app.post("/createitem", requireLogin, upload.array("images", 3), async (req, res) => {
   try {
     const { title, price, description, location, contact } = req.body
     const userId = req.session.userId
@@ -841,7 +837,7 @@ app.post("/createitem", upload.array("images", 3), async (req, res) => {
 
 
 // EDIT ITEM AND UPDATE
-app.put("/edititem/:id", upload.array("images", 3), async (req, res) => {
+app.put("/edititem/:id", requireLogin, upload.array("images", 3), async (req, res) => {
   const { id } = req.params
   const { title, price, description, location, contact } = req.body
 
@@ -884,7 +880,7 @@ app.put("/edititem/:id", upload.array("images", 3), async (req, res) => {
 
 // delete item
 
-app.delete("/deleteitem/:id", async (req, res) => {
+app.delete("/deleteitem/:id", requireLogin, async (req, res) => {
   const { id } = req.params
 
   await db.query("DELETE FROM market_items WHERE post_id=?", [id])
@@ -923,12 +919,12 @@ app.post("/toggle-save/:id", requireLogin, async (req, res) => {
 // RELATIONSHIPS:
 
 // get relationship form
-app.get("/relationships/new", (req, res) => {
+app.get("/relationships/new", requireLogin, (req, res) => {
   res.render("relationshipForm")
 })
 
 // show relationships
-app.get("/relationships", async (req, res) => {
+app.get("/relationships", requireLogin, async (req, res) => {
   const [rows] = await db.query(`
     SELECT p.id AS post_id, r.*
     FROM posts p
@@ -941,7 +937,7 @@ app.get("/relationships", async (req, res) => {
 })
 
 // get one relationship
-app.get("/relationships/:id", async (req, res) => {
+app.get("/relationships/:id", requireLogin, async (req, res) => {
   const { id } = req.params
 
   const [[rel]] = await db.query(`
@@ -961,6 +957,7 @@ app.get("/relationships/:id", async (req, res) => {
 // create relationship
 app.post(
   "/create-relationship",
+  requireLogin,
   upload.array("images", 3),
   async (req, res) => {
     try {
@@ -1031,6 +1028,7 @@ app.post(
 // edit relationship
 app.post(
   "/relationships/edit/:id",
+  requireLogin,
   upload.array("images", 3),
   async (req, res) => {
 
@@ -1094,8 +1092,8 @@ app.post(
 
 
 
-// delete relationhip
-app.post("/relationships/delete/:id", async (req, res) => {
+// delete relationship
+app.post("/relationships/delete/:id", requireLogin, async (req, res) => {
   const { id } = req.params
 
   await db.query("DELETE FROM relationship_profiles WHERE post_id=?", [id])
@@ -1108,7 +1106,7 @@ app.post("/relationships/delete/:id", async (req, res) => {
 //CLINIC REVIEWS
 
 // Get Clinic review form
-app.get("/reviews/new", (req, res) => {
+app.get("/reviews/new", requireLogin, (req, res) => {
   res.render("clinicreviewForm")
 })
 
@@ -1146,7 +1144,7 @@ app.post("/reviews/create", requireLogin, async (req, res) => {
 
 
 //  show all reviews
-app.get("/reviews", async (req, res) => {
+app.get("/reviews", requireLogin, async (req, res) => {
   const [rows] = await db.query(`
     SELECT p.id AS post_id, r.*
     FROM posts p
@@ -1227,7 +1225,7 @@ app.post("/reviews/comments/delete/:postId/:commentId", requireLogin, async (req
 
 //get edit clinic view
 
-app.get("/reviews/edit/:id", async (req, res) => {
+app.get("/reviews/edit/:id",requireLogin, async (req, res) => {
   const { id } = req.params
 
   const [[review]] = await db.query(
@@ -1240,7 +1238,7 @@ app.get("/reviews/edit/:id", async (req, res) => {
 
 // post edit clinic view
 
-app.post("/reviews/edit/:id", async (req, res) => {
+app.post("/reviews/edit/:id", requireLogin, async (req, res) => {
   const { id } = req.params
   const { rating, pros, cons, recommendation } = req.body
 
@@ -1303,7 +1301,7 @@ app.post("/reviews/comments/add/:reviewId", requireLogin, async (req,res)=>{
 
 
 // ADMIN DASHBOARD
-app.get("/admin", requireAdmin, async (req, res) => {
+app.get("/admin", requireAdmin, requireLogin, async (req, res) => {
 
   const [[counts]] = await db.query(`
     SELECT
@@ -1319,7 +1317,7 @@ app.get("/admin", requireAdmin, async (req, res) => {
 
 
 // manage users
-app.get("/admin/users", requireAdmin, async (req, res) => {
+app.get("/admin/users", requireAdmin, requireLogin, async (req, res) => {
   const [users] = await db.query(
     "SELECT id, fname, lname, email, role FROM users ORDER BY created_at DESC"
   )
@@ -1327,6 +1325,96 @@ app.get("/admin/users", requireAdmin, async (req, res) => {
 })
 
 
+
+// PATIENTS' DATA
+
+// show Patient's Registration form
+app.get("/patients/new", requireLogin, (req, res) => {
+  res.render("patients/form", { patient: null });
+});
+
+
+// create new patient record
+app.post("/patients", requireLogin, async (req, res) => {
+  const doctorId = req.session.userId;
+  const data = req.body;
+
+  await db.query(
+    `INSERT INTO patients SET ?`,
+    { ...data, doctor_id: doctorId }
+  );
+
+  res.redirect("/patients");
+});
+
+// patients list
+app.get("/patients", requireLogin, async (req, res) => {
+  const doctorId = req.session.userId;
+
+  const [patients] = await db.query(
+    `SELECT patient_id, first_name, last_name,
+            gender, date_of_birth, diagnosis
+     FROM patients
+     WHERE doctor_id = ?
+     ORDER BY first_name`,
+    [doctorId]
+  );
+
+  res.render("patients/list", { patients });
+});
+
+// edit patient form
+app.get("/patients/:id/edit", requireLogin, async (req, res) => {
+  const doctorId = req.session.userId;
+  const id = req.params.id;
+
+  const [rows] = await db.query(
+    `SELECT * FROM patients
+     WHERE patient_id = ?
+     AND doctor_id = ?`,
+    [id, doctorId]
+  );
+
+  if (!rows.length) {
+    return res.send("Access denied");
+  }
+
+  res.render("patients/edit_modal", {
+    patient: rows[0]
+  });
+});
+
+
+// update patient record
+app.post("/patients/:id/update", requireLogin, async (req, res) => {
+  const doctorId = req.session.userId;
+  const id = req.params.id;
+
+  await db.query(
+    `UPDATE patients
+     SET ?
+     WHERE patient_id = ?
+     AND doctor_id = ?`,
+    [req.body, id, doctorId]
+  );
+
+  res.redirect("/patients");
+});
+
+// delete patient record
+app.post("/patients/:id/delete", requireLogin, async (req, res) => {
+  const doctorId = req.session.userId;
+  const id = req.params.id;
+
+  await db.query(
+    `DELETE FROM patients
+     WHERE patient_id = ?
+     AND doctor_id = ?`,
+    [id, doctorId]
+  );
+
+  res.redirect("/patients");
+});
 
 
 app.listen(port, () => {

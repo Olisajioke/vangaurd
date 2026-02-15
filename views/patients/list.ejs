@@ -1,0 +1,199 @@
+<%- include("../partials/header") %>
+
+<div class="container py-4" style="max-width:1100px;">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1 text-success">
+        <i class="fas fa-users me-2"></i>My Patients
+      </h3>
+      <div class="text-muted small">
+        Your private clinical records
+      </div>
+    </div>
+
+    <a href="/patients/new" class="btn btn-success shadow-sm">
+      <i class="fas fa-plus me-1"></i>
+      New Patient
+    </a>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="fas fa-search text-muted"></i>
+        </span>
+        <input id="patientSearch"
+               class="form-control border-start-0"
+               placeholder="Search patient name...">
+      </div>
+    </div>
+  </div>
+
+  <!-- PATIENT LIST -->
+  <div id="patientList" class="row g-3">
+
+    <% if (patients.length === 0) { %>
+      <div class="col-12">
+        <div class="card border-0 shadow-sm text-center p-5">
+          <i class="fas fa-user-slash fa-2x text-muted mb-3"></i>
+          <div class="fw-semibold">No patients yet</div>
+          <div class="text-muted small mb-3">
+            Create your first patient record
+          </div>
+          <a href="/patients/new" class="btn btn-success">
+            Add Patient
+          </a>
+        </div>
+      </div>
+    <% } %>
+
+    <% patients.forEach(p => { %>
+      <div class="col-md-6 patient-card"
+           data-name="<%= (p.first_name + ' ' + p.last_name).toLowerCase() %>">
+
+        <div class="card border-0 shadow-sm h-100 patient-hover">
+
+          <div class="card-body d-flex justify-content-between">
+
+            <div>
+              <div class="fw-semibold fs-5">
+                <%= p.first_name %> <%= p.last_name %>
+              </div>
+
+              <div class="text-muted small">
+                <%= p.gender || "—" %>
+                <% if (p.date_of_birth) { %>
+                  • <%= p.date_of_birth %>
+                <% } %>
+              </div>
+
+              <% if (p.diagnosis) { %>
+                <div class="mt-2 small text-success">
+                  <i class="fas fa-eye me-1"></i>
+                  <%= p.diagnosis %>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="text-end">
+                <a href="/patients/<%= p.patient_id %>"
+                    class="btn btn-sm btn-outline-success mb-1">
+                    Open
+                </a>
+
+                <button class="btn btn-sm btn-light border mb-1"
+                        onclick="openEditModal('<%= p.patient_id %>')">
+                    Edit
+                </button>
+
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="openDeleteModal('<%= p.patient_id %>')">
+                    Delete
+                </button>
+            </div>
+            </div>
+        </div>
+      </div>
+    <% }) %>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editPatientModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" id="editPatientContent">
+      <!-- form loads here -->
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade" id="deletePatientModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4">
+
+      <div class="mb-3">
+        <i class="fas fa-exclamation-triangle text-danger fa-2x"></i>
+      </div>
+
+      <h5 class="mb-2">Delete patient?</h5>
+      <div class="text-muted small mb-4">
+        This record will be permanently removed
+      </div>
+
+      <form id="deletePatientForm" method="POST">
+        <button class="btn btn-danger px-4 me-2">
+          Delete
+        </button>
+        <button type="button"
+                class="btn btn-light border"
+                data-bs-dismiss="modal">
+          Cancel
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.patient-hover {
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.patient-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.08);
+}
+</style>
+
+<script>
+const searchInput = document.getElementById("patientSearch");
+const cards = document.querySelectorAll(".patient-card");
+
+searchInput.addEventListener("input", e => {
+  const term = e.target.value.toLowerCase();
+
+  cards.forEach(card => {
+    const name = card.dataset.name;
+    card.style.display = name.includes(term) ? "" : "none";
+  });
+});
+</script>
+
+
+<script>
+async function openEditModal(id) {
+  const res = await fetch(`/patients/${id}/edit`);
+  const html = await res.text();
+
+  document.getElementById("editPatientContent").innerHTML = html;
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("editPatientModal")
+  );
+  modal.show();
+}
+
+function openDeleteModal(id) {
+  const form = document.getElementById("deletePatientForm");
+  form.action = `/patients/${id}/delete`;
+
+  const modal = new bootstrap.Modal(
+    document.getElementById("deletePatientModal")
+  );
+  modal.show();
+}
+</script>
+
+<%- include("../partials/footer") %>
