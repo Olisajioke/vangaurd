@@ -6,6 +6,7 @@ import multer from "multer";
 import methodOverride from "method-override"
 import bcrypt from "bcrypt";
 import db from "./db.js"
+import nodemailer from "nodemailer";
 
 import path from "path"
 
@@ -21,6 +22,23 @@ async function testDB() {
 
 testDB()
 
+
+
+// HELPER FUNCTION TO CALCULATE AGE
+function calculateAge(dob) {
+    if (!dob) return null;
+    const birth = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    return age;
+  }
 
 //CONSTANTS
 const app = express();
@@ -123,7 +141,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.use(methodOverride("_method"))
 
-
+// GLOBAL USER INFO MIDDLEWARE
 app.use(async (req, res, next) => {
   try {
     res.locals.userId = req.session?.userId || null
@@ -150,11 +168,45 @@ app.use(async (req, res, next) => {
 })
 
 
+// legacy user info middleware (for non-async routes)
 app.use((req, res, next) => {
   res.locals.userId = req.session?.userId || null;
   next();
 });
 
+
+// function to convert empty strings to null for numeric fields
+function normalizePatientData(data) {
+  const numericFields = [
+    "sph_od_obj","cyl_od_obj","axis_od_obj",
+    "sph_os_obj","cyl_os_obj","axis_os_obj",
+    "sph_od_sub","cyl_od_sub","axis_od_sub",
+    "sph_os_sub","cyl_os_sub","axis_os_sub",
+    "add_od","add_os"
+  ];
+
+  numericFields.forEach(f => {
+    if (data[f] === "" || data[f] === undefined) {
+      data[f] = null;
+    }
+  });
+
+  if (data.date_of_birth === "") {
+    data.date_of_birth = null;
+  }
+
+  return data;
+}
+
+// function to convert multi-select arrays to comma-separated strings
+function normalizeMultiSelect(data) {
+  ["systemic_condition","ocular_surgery"].forEach(f => {
+    if (Array.isArray(data[f])) {
+      data[f] = data[f].join(",");
+    }
+  });
+  return data;
+}
 
 
 // HOME ROUTE
@@ -289,8 +341,9 @@ app.post("/user/delete/:id", requireLogin, async (req, res) => {
 
 //profile page
 app.get("/profile", requireLogin, async (req, res) => {
+
   try {
-    const userId = req.session.userId
+    const userId = req.session.userId;
 
     // USER
     const [[user]] = await db.query(
@@ -298,9 +351,9 @@ app.get("/profile", requireLogin, async (req, res) => {
        FROM users
        WHERE id=?`,
       [userId]
-    )
+    );
 
-    if (!user) return res.redirect("/login")
+    if (!user) return res.redirect("/login");
 
     // POSTS COUNT
     const [[postCount]] = await db.query(
@@ -308,7 +361,7 @@ app.get("/profile", requireLogin, async (req, res) => {
        FROM posts
        WHERE user_id=?`,
       [userId]
-    )
+    );
 
     // SAVED COUNT
     const [[savedCount]] = await db.query(
@@ -316,35 +369,43 @@ app.get("/profile", requireLogin, async (req, res) => {
        FROM saved_items
        WHERE user_id=?`,
       [userId]
-    )
-    // ARTICLES COUNT (safe: table may differ)
-    let articleCount = 0
+    );
+
+    // ARTICLES COUNT
+    let articleCount = 0;
     try {
       const [[a]] = await db.query(
         `SELECT COUNT(*) AS count
          FROM posts
          WHERE user_id=? AND type='article'`,
         [userId]
-      )
-      articleCount = a.count
-    } catch (err) {
-      console.error("Error fetching article count:", err)
-      articleCount = 0
-    }
+      );
+      articleCount = a.count;
+    } catch {}
 
-    // RELATIONSHIP COUNT (safe: table may differ)
-    let relCount = 0
+    // RELATIONSHIP COUNT
+    let relCount = 0;
     try {
       const [[r]] = await db.query(
         `SELECT COUNT(*) AS count
          FROM relationship_profiles
          WHERE user_id=?`,
         [userId]
-      )
-      relCount = r.count
-    } catch {
-      relCount = 0
-    }
+      );
+      relCount = r.count;
+    } catch {}
+
+    // PATIENT COUNT
+    let patientCount = 0;
+    try {
+      const [[p]] = await db.query(
+        `SELECT COUNT(*) AS count
+         FROM patients
+         WHERE doctor_id=?`,
+        [userId]
+      );
+      patientCount = p.count;
+    } catch {}
 
     res.render("profile", {
       user,
@@ -352,15 +413,17 @@ app.get("/profile", requireLogin, async (req, res) => {
         posts: postCount.count,
         saved: savedCount.count,
         relationships: relCount,
-        articles: articleCount
+        articles: articleCount,
+        patients: patientCount
       }
-    })
+    });
 
   } catch (err) {
-    console.error("PROFILE ERROR →", err)
-    res.send("Profile load error")
+    console.error("PROFILE ERROR →", err);
+    res.send("Profile load error");
   }
-})
+});
+
 
 
 // EDIT USER WITH DB
@@ -1283,7 +1346,7 @@ app.post("/reviews/edit/:id", requireLogin, async (req,res)=>{
 })
 
 
-
+// review comments
 app.post("/reviews/comments/add/:reviewId", requireLogin, async (req,res)=>{
   const { reviewId } = req.params
   const { content } = req.body
@@ -1337,31 +1400,58 @@ app.get("/patients/new", requireLogin, (req, res) => {
 // create new patient record
 app.post("/patients", requireLogin, async (req, res) => {
   const doctorId = req.session.userId;
-  const data = req.body;
+  const data = normalizePatientData(req.body);
+  normalizeMultiSelect(data);
 
   await db.query(
     `INSERT INTO patients SET ?`,
     { ...data, doctor_id: doctorId }
   );
-
   res.redirect("/patients");
 });
 
-// patients list
+
+// patients list with age calculation
 app.get("/patients", requireLogin, async (req, res) => {
   const doctorId = req.session.userId;
 
   const [patients] = await db.query(
-    `SELECT patient_id, first_name, last_name,
-            gender, date_of_birth, diagnosis
-     FROM patients
-     WHERE doctor_id = ?
-     ORDER BY first_name`,
+    `SELECT * FROM patients
+     WHERE doctor_id=?`,
     [doctorId]
   );
 
+  patients.forEach(p => {
+    p.age = calculateAge(p.date_of_birth);
+  });
+
   res.render("patients/list", { patients });
 });
+
+// view single patient with age calculation
+app.get("/patients/:id", requireLogin, async (req, res) => {
+  const doctorId = req.session.userId;
+  const id = req.params.id;
+
+  const [rows] = await db.query(
+    `SELECT *
+     FROM patients
+     WHERE patient_id=? AND doctor_id=?`,
+    [id, doctorId]
+  );
+
+  if (!rows.length) {
+    return res.status(404).send("Patient not found");
+  }
+
+  const patient = rows[0];
+
+  // calculate age
+  patient.age = calculateAge(patient.date_of_birth);
+
+  res.render("patients/view", { patient });
+});
+
 
 // edit patient form
 app.get("/patients/:id/edit", requireLogin, async (req, res) => {
@@ -1370,19 +1460,19 @@ app.get("/patients/:id/edit", requireLogin, async (req, res) => {
 
   const [rows] = await db.query(
     `SELECT * FROM patients
-     WHERE patient_id = ?
-     AND doctor_id = ?`,
+     WHERE patient_id=? AND doctor_id=?`,
     [id, doctorId]
   );
 
   if (!rows.length) {
-    return res.send("Access denied");
+    return res.status(404).send("Patient not found");
   }
 
-  res.render("patients/edit_modal", {
+  res.render("patients/form", {
     patient: rows[0]
   });
 });
+
 
 
 // update patient record
@@ -1390,14 +1480,14 @@ app.post("/patients/:id/update", requireLogin, async (req, res) => {
   const doctorId = req.session.userId;
   const id = req.params.id;
 
-  await db.query(
-    `UPDATE patients
-     SET ?
-     WHERE patient_id = ?
-     AND doctor_id = ?`,
-    [req.body, id, doctorId]
-  );
+  const data = normalizePatientData(req.body);
+  normalizeMultiSelect(data);
 
+  await db.query(
+    `UPDATE patients SET ?
+    WHERE patient_id=? AND doctor_id=?`,
+    [data, id, doctorId]
+  );
   res.redirect("/patients");
 });
 
@@ -1414,6 +1504,34 @@ app.post("/patients/:id/delete", requireLogin, async (req, res) => {
   );
 
   res.redirect("/patients");
+});
+
+
+// EMAIL TEST ROUTE
+app.post("/contact", async (req, res) => {
+  const { Email, Message } = req.body;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "yourgmail@gmail.com",
+        pass: "your_app_password"
+      }
+    });
+
+    await transporter.sendMail({
+      from: Email,
+      to: "chijioke914@gmail.com",
+      subject: "New Contact Message",
+      text: Message
+    });
+
+    res.send("Message sent successfully");
+  } catch (err) {
+    console.error(err);
+    res.send("Error sending message");
+  }
 });
 
 

@@ -65,11 +65,15 @@
               </div>
 
               <div class="text-muted small">
-                <%= p.gender || "—" %>
-                <% if (p.date_of_birth) { %>
-                  • <%= p.date_of_birth %>
-                <% } %>
-              </div>
+                    <%= p.gender || "—" %>
+                    <% if (p.age) { %>
+                        • <%= p.age %> yrs
+                    <% } %>
+                </div>
+                <div class="text-muted small">
+                    • Systemic Disease: <%= p.systemic_condition?.replaceAll(",", ", ") || "—" %> <br>
+                    • Previous Surgeries: <%= p.ocular_surgery?.replaceAll(",", ", ") || "—" %>
+                </div>
 
               <% if (p.diagnosis) { %>
                 <div class="mt-2 small text-success">

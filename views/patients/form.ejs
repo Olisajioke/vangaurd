@@ -41,12 +41,41 @@
         </div>
 
         <div class="col-md-4">
-          <label class="form-label">Date of Birth</label>
+          <label class="form-label">Date of Birth (or leave if unknown)</label>
           <input type="date" name="date_of_birth" class="form-control"
                  value="<%= patient?.date_of_birth || '' %>">
         </div>
+        <div class="col-md-6">
+            <div class="col-md-6">
+                <label class="form-label">Systemic Conditions</label>
+                <select name="systemic_condition" class="form-select" multiple size="6">
+                    <% const sys = (patient?.systemic_condition || "").split(","); %>
 
-      </div>
+                    <option value="No Chronic Disease" <%= sys.includes("No Chronic Disease")?"selected":"" %>>No Chronic Disease</option>
+                    <option value="HTN" <%= sys.includes("HTN")?"selected":"" %>>HTN</option>
+                    <option value="DM" <%= sys.includes("DM")?"selected":"" %>>DM</option>
+                    <option value="HIV" <%= sys.includes("HIV")?"selected":"" %>>HIV</option>
+                    <option value="Neurological" <%= sys.includes("Neurological")?"selected":"" %>>Neurological</option>
+                    <option value="ALS" <%= sys.includes("ALS")?"selected":"" %>>ALS</option>
+                    <option value="MS" <%= sys.includes("MS")?"selected":"" %>>MS</option>
+                </select>
+                <small class="text-muted">Hold Ctrl / Cmd to select multiple</small>
+                </div>
+
+                <div class="col-md-6">
+                <label class="form-label">Surgeries</label>
+                <select name="ocular_surgery" class="form-select" multiple size="5">
+                    <% const surg = (patient?.ocular_surgery || "").split(","); %>
+
+                    <option value="None" <%= surg.includes("None")?"selected":"" %>>None</option>
+                    <option value="Cataract" <%= surg.includes("Cataract")?"selected":"" %>>Cataract</option>
+                    <option value="Glaucoma" <%= surg.includes("Glaucoma")?"selected":"" %>>Glaucoma</option>
+                    <option value="Brain Surgery" <%= surg.includes("Brain Surgery")?"selected":"" %>>Brain Surgery</option>
+                    <option value="Others" <%= surg.includes("Others")?"selected":"" %>>Others</option>
+                </select>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- VISUAL ACUITY -->
@@ -141,9 +170,33 @@
           <div class="col"><input name="cyl_os_sub" class="form-control" value="<%= patient?.cyl_os_sub || '' %>"></div>
           <div class="col"><input name="axis_os_sub" class="form-control" value="<%= patient?.axis_os_sub || '' %>"></div>
         </div>
-
       </div>
     </div>
+    <div class="row mt-2">
+        <div class="col fw-semibold">VA (cc)</div>
+            <div class="col">
+                <input name="va_od_sub" class="form-control"
+                    value="<%= patient?.va_od_sub || '' %>">
+            </div>
+            <div class="col">
+                <input name="va_os_sub" class="form-control"
+                    value="<%= patient?.va_os_sub || '' %>">
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col fw-semibold">ADD</div>
+            <div class="col">
+                <input name="add_od" class="form-control"
+                    value="<%= patient?.add_od || '' %>">
+            </div>
+            <div class="col">
+                <input name="add_os" class="form-control"
+                    value="<%= patient?.add_os || '' %>">
+            </div>
+        </div>
+    </div>
+
 
     <!-- NOTES -->
     <div class="card shadow-sm mb-4">
