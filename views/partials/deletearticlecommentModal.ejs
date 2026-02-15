@@ -1,0 +1,55 @@
+<% if (comments && comments.length > 0) { %>
+  <% comments.forEach(function(c) { %>
+
+    <div class="modal fade"
+         id="deleteCommentModal-<%= c.id %>"
+         tabindex="-1"
+         aria-hidden="true">
+
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content delete-comment-modal border-0">
+
+          <div class="modal-body text-center px-4 py-4">
+
+            <div class="delete-icon mb-3">
+              <i class="fas fa-trash-alt"></i>
+            </div>
+
+            <h5 class="mb-2">Delete Comment?</h5>
+
+            <p class="text-muted small mb-3">
+              This action cannot be undone.
+            </p>
+
+            <div class="delete-preview p-3 mb-3">
+              <%= c.content %>
+            </div>
+
+            <form action="/posts/<%= post.id %>/comments/<%= c.id %>/delete?_method=DELETE"
+                  method="POST">
+
+              <div class="d-flex justify-content-center gap-2">
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                  Cancel
+                </button>
+
+                <button class="btn btn-danger px-4">
+                  Delete
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  <% }) %>
+<% } %>

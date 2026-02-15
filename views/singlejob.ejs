@@ -1,0 +1,154 @@
+<%- include("partials/header") %>
+
+<!-- HERO -->
+<section class="job-hero text-white d-flex align-items-center">
+  <div class="container text-center">
+    <h1 class="display-5 fw-bold mb-2"><%= job.title %></h1>
+    <p class="lead mb-1"><%= job.clinic %> • <%= job.location %></p>
+    <p class="small text-white-75">
+      Posted by <strong><%= job.fname %> <%= job.lname %></strong>
+    </p>
+  </div>
+</section>
+
+<!-- JOB CONTENT -->
+<div class="container my-5">
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <div class="card job-view-card shadow-sm border-0">
+
+        <!-- SALARY STRIP -->
+        <div class="job-salary text-center">
+          ر.س <%= job.salary %>
+        </div>
+
+        <div class="card-body">
+
+          <h5 class="fw-bold mb-3 text-gold">
+            Job Description
+          </h5>
+
+          <p class="job-description">
+            <%= job.description %>
+          </p>
+
+          <hr>
+
+          <div class="job-meta">
+            <p class="mb-2">
+              <strong>Clinic:</strong> <%= job.clinic %>
+            </p>
+            <p class="mb-2">
+              <strong>Location:</strong> <%= job.location %>
+            </p>
+            <p class="mb-0">
+              <strong>Contact:</strong> <%= job.contact %>
+            </p>
+          </div>
+
+        </div>
+
+        <div class="card-footer bg-white border-0 text-center">
+
+            <% if (job.contact) { %>
+                <a href="https://wa.me/<%= String(job.contact).replace(/\D/g,'') %>"
+                    target="_blank"
+                    class="btn btn-success me-2">
+                    <i class="fab fa-whatsapp me-1"></i>
+                    WhatsApp Clinic
+                </a>
+            <% } else { %>
+                <span class="btn btn-secondary me-2 disabled">
+                    <i class="fas fa-phone-slash me-1"></i>
+                    No Contact
+                </span>
+            <% } %>
+          <button class="btn btn-outline-success me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#editJobModal-<%= job.id %>">
+            Edit
+          </button>
+
+          <button class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#deleteJobModal-<%= job.id %>">
+            Delete
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<%- include("partials/editJobModal", { job }) %>
+<%- include("partials/deleteJobModal", { job }) %>
+
+<style>
+.job-hero {
+  height: 38vh;
+  background:
+    linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)),
+    linear-gradient(135deg, #d4af37, #c9a227);
+}
+
+.text-white-75 {
+  color: rgba(255,255,255,.85);
+}
+
+.text-gold {
+  color: #c9a227;
+}
+
+.job-view-card {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.job-salary {
+  background: linear-gradient(135deg, #d4af37, #c9a227);
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 1.4rem;
+  padding: 0.8rem;
+}
+
+.job-description {
+  line-height: 1.7;
+  color: #333;
+}
+
+.job-meta strong {
+  color: #1a1a1a;
+}
+
+.card-footer .btn {
+  min-width: 120px;
+}
+
+.btn-success {
+  background: #1e7e34;
+  border: none;
+}
+
+.btn-success:hover {
+  background: #17642a;
+}
+
+.btn-outline-success {
+  border-color: #1e7e34;
+  color: #1e7e34;
+}
+
+.btn-outline-success:hover {
+  background: #1e7e34;
+  color: white;
+}
+</style>
+
+<%- include("partials/footer") %>

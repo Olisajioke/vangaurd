@@ -11,9 +11,9 @@
 </section>
 
 <main class="container my-5">
-  <% if (db.posts && db.posts.length > 0) { %>
+  <% if (posts && posts.length > 0) { %>
     <div class="row g-4">
-      <% db.posts.forEach(function(post) { %>
+      <% posts.forEach(function(post) { %>
         <div class="col-md-6 col-lg-4">
           <div class="flip-card story-card">
             <div class="flip-card-inner">
@@ -25,12 +25,14 @@
                 </div>
 
                 <div class="card-img-wrapper">
-                  <img src="<%= post.image || '/images/default_story.jpg' %>" alt="story image">
+                  <img src="<%= post.image ? '/uploads/' + post.image : './images/write.jpg' %>" alt="story image">
+
+
                   
                   <div class="image-overlay">
                     <div class="overlay-text">
                       <div class="subtitle"><%= post.subtitle %></div>
-                      <div class="author">by <%= post.author %></div>
+                      <div class="author">by <%= post.fname %></div>
                     </div>
                   </div>
                 </div>
@@ -40,12 +42,14 @@
               <div class="flip-card-back card text-white bg-dark">
                 <div class="card-header fw-bold text-center">
                   Story Preview
+                  <div style="color:red;font-size:12px">
+                    <%= post.image1 %>
+                  </div>
                 </div>
 
                 <div class="card-body d-flex flex-column justify-content-between">
-                  <p class="mb-3">
-                    <%= post.body.substring(0, 140) %>...
-                  </p>
+                     <%= ((post.content || post.body || '').replace(/<[^>]*>/g, '').substring(0,140)) %>...
+                    <hr>
 
                   <div class="text-center">
                     <a href="/view_posts/<%= post.id %>" class="btn btn-outline-light btn-sm">

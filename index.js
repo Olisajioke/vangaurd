@@ -163,120 +163,6 @@ app.get("/", (req, res) => {
 })
 
 
-///ARTICLES ROUTES
-
-// GET all articles
-app.get("/articles", requireLogin, async (req, res) => {
-  const [articles] = await db.query(`
-    SELECT p.id, p.title, p.subtitle, p.content,
-           p.image1 AS image, p.created_at,
-           u.fname
-    FROM posts p
-    LEFT JOIN users u ON p.user_id = u.id
-    WHERE p.type='article'
-    ORDER BY p.created_at DESC
-  `)
-
-  res.render("articles", { articles })
-})
-
-
-
-// Route to create a new post or edit an existing one
-app.get("/new_clinic_stories", requireLogin, async (req, res) => {
-  const postId = req.query.id
-  const isEdit = req.query.mode === "edit"
-
-  let post = null
-
-  if (isEdit && postId) {
-    const [[row]] = await db.query(
-      "SELECT * FROM posts WHERE id=? AND type='article'",
-      [postId]
-    )
-    post = row
-  }
-
-  res.render("create_post", { post, isEdit })
-})
-
-
-
-// Handle form submission for creating or editing a post
-app.post("/submit_story", requireLogin, upload.single("image"), async (req, res) => {
-  const { title, subtitle, content, postId } = req.body
-  const userId = req.session.userId
-  const image = req.file ? req.file.filename : null
-
-  try {
-
-    if (postId) {
-      // EDIT
-      if (image) {
-        await db.query(`
-          UPDATE posts
-          SET title=?, subtitle=?, content=?, image1=?
-          WHERE id=? AND type='article'
-        `, [title, subtitle, content, image, postId])
-      } else {
-        await db.query(`
-          UPDATE posts
-          SET title=?, subtitle=?, content=?
-          WHERE id=? AND type='article'
-        `, [title, subtitle, content, postId])
-      }
-
-      res.redirect(`/view_posts/${postId}`)
-
-    } else {
-      // CREATE
-      const newId = Date.now().toString()
-
-      await db.query(`
-        INSERT INTO posts
-        (id, user_id, type, title, subtitle, content, image1)
-        VALUES (?, ?, 'article', ?, ?, ?, ?)
-      `, [newId, userId, title, subtitle, content, image])
-
-      res.redirect(`/view_posts/${newId}`)
-    }
-
-  } catch (err) {
-    console.error(err)
-    res.send("Article save error")
-  }
-})
-
-
-// View a single post
-app.get("/view_posts/:id", requireLogin, async (req, res) => {
-  const { id } = req.params
-
-  const [[post]] = await db.query(`
-    SELECT p.*, u.fname
-    FROM posts p
-    LEFT JOIN users u ON p.user_id = u.id
-    WHERE p.id=? AND p.type='article'
-  `, [id])
-
-  if (!post) return res.status(404).send("Post not found")
-
-  const [comments] = await db.query(`
-    SELECT c.id, c.content, c.created_at, u.fname
-    FROM comments c
-    LEFT JOIN users u ON c.user_id = u.id
-    WHERE c.post_id=?
-    ORDER BY c.created_at ASC
-  `, [id])
-
-  res.render("view_post", {
-    post,
-    comments,
-    editCommentId: req.query.edit
-  })
-})
-
-
 // USER REGISTRATION
 // Route to display the add new user form
 app.get("/add_new_user", (req, res) => {
@@ -398,28 +284,7 @@ app.post("/user/delete/:id", async (req, res) => {
   res.redirect("/")
 })
 
-// add comments
-app.post("/posts/:id/comments", (req, res) => {
-  const postId = parseInt(req.params.id);
-  const post = db.posts.find(p => p.id === postId);
 
-  if (!post) return res.status(404).send("Post not found");
-
-  const { name, comment } = req.body;
-
-  // Add comment to the post
-  post.comments.push({
-    id: Date.now(),
-    name,
-    comment,
-    date: new Date().toLocaleString()
-  });
-  const num = post.id;
-  // Redirect back to the post page
-  req.flash('success_msg', 'Comment created successfully');
-  res.redirect('/view_posts/' + num);
-
-});
 
 
 //profile page
@@ -452,6 +317,20 @@ app.get("/profile", requireLogin, async (req, res) => {
        WHERE user_id=?`,
       [userId]
     )
+    // ARTICLES COUNT (safe: table may differ)
+    let articleCount = 0
+    try {
+      const [[a]] = await db.query(
+        `SELECT COUNT(*) AS count
+         FROM posts
+         WHERE user_id=? AND type='article'`,
+        [userId]
+      )
+      articleCount = a.count
+    } catch (err) {
+      console.error("Error fetching article count:", err)
+      articleCount = 0
+    }
 
     // RELATIONSHIP COUNT (safe: table may differ)
     let relCount = 0
@@ -472,7 +351,8 @@ app.get("/profile", requireLogin, async (req, res) => {
       stats: {
         posts: postCount.count,
         saved: savedCount.count,
-        relationships: relCount
+        relationships: relCount,
+        articles: articleCount
       }
     })
 
@@ -574,32 +454,162 @@ app.post("/logout", (req, res) => {
 })
 
 
-// Edit comments page route
-app.get("/posts/:id/edit_comments", (req, res) => {
+
+
+
+
+/// ARTICLES AND COMMENT ROUTES
+///ARTICLES ROUTES
+
+// GET all articles
+app.get("/articles", requireLogin, async (req, res) => {
+  const [articles] = await db.query(`
+    SELECT p.id, p.title, p.subtitle, p.content,
+           p.image1 AS image, p.created_at,
+           u.fname, u.lname
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.type='article'
+    ORDER BY p.created_at DESC
+  `)
+
+  res.render("articles", { posts: articles })
+})
+
+
+
+// Route to create a new post or edit an existing one
+app.get("/new_clinic_stories", requireLogin, async (req, res) => {
+  const postId = req.query.id
+  const isEdit = req.query.mode === "edit"
+
+  let post = null
+
+  if (isEdit && postId) {
+    const [[row]] = await db.query(
+      "SELECT * FROM posts WHERE id=? AND type='article'",
+      [postId]
+    )
+    post = row
+  }
+
+  res.render("create_post", { post, isEdit })
+})
+
+
+
+// Handle form submission for creating or editing a post
+app.post("/submit_story", requireLogin, upload.single("image"), async (req, res) => {
+  const { title, subtitle, content, postId } = req.body
+  const userId = req.session.userId
+  const image = req.file ? req.file.filename : null
+
+  try {
+
+    if (postId) {
+      // EDIT
+      if (image) {
+        await db.query(`
+          UPDATE posts
+          SET title=?, subtitle=?, content=?, image1=?
+          WHERE id=? AND type='article'
+        `, [title, subtitle, content, image, postId])
+      } else {
+        await db.query(`
+          UPDATE posts
+          SET title=?, subtitle=?, content=?
+          WHERE id=? AND type='article'
+        `, [title, subtitle, content, postId])
+      }
+
+      res.redirect(`/view_posts/${postId}`)
+
+    } else {
+      // CREATE
+      const newId = Date.now().toString()
+
+      await db.query(`
+        INSERT INTO posts
+        (id, user_id, type, title, subtitle, content, image1)
+        VALUES (?, ?, 'article', ?, ?, ?, ?)
+      `, [newId, userId, title, subtitle, content, image])
+
+      res.redirect(`/view_posts/${newId}`)
+    }
+
+  } catch (err) {
+    console.error(err)
+    res.send("Article save error")
+  }
+})
+
+
+// View a single post
+app.get("/view_posts/:id", requireLogin, async (req, res) => {
+  const { id } = req.params
+
+  const [[post]] = await db.query(`
+    SELECT p.*, u.fname, u.lname
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.id
+    WHERE p.id=? AND p.type='article'
+  `, [id])
+
+  if (!post) return res.status(404).send("Post not found")
+
+  const [comments] = await db.query(`
+    SELECT c.id, c.content, c.created_at, u.fname
+    FROM comments c
+    LEFT JOIN users u ON c.user_id = u.id
+    WHERE c.post_id=?
+    ORDER BY c.created_at ASC
+  `, [id])
+
+  res.render("view_post", {
+    post,
+    comments,
+    editCommentId: req.query.edit
+  })
+})
+
+
+// add comments
+app.post("/posts/:id/comments", requireLogin, async (req, res) => {
   const postId = parseInt(req.params.id);
-  const post = db.posts.find(p => p.id === postId);
+
+  const [[post]] = await db.query(
+    "SELECT id FROM posts WHERE id=?",
+    [postId]
+  );
 
   if (!post) return res.status(404).send("Post not found");
 
-  res.render("view_post", { post });
+  const { comment } = req.body;
+
+  await db.query(
+    "INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)",
+    [postId, req.session.userId, comment]
+  );
+
+  req.flash("success_msg", "Comment created successfully");
+  res.redirect("/view_posts/" + postId);
 });
 
 
-// Edit comment route
-app.post("/posts/:postId/comments/:commentId/edit", requireLogin, async (req, res) => {
-  const { postId, commentId } = req.params
-  const { comment } = req.body
+//EDIT COMMENT
 
-  await db.query(
-    `UPDATE comments
-     SET content=?
-     WHERE id=? AND post_id=?`,
-    [comment, commentId, postId]
-  )
+app.put("/posts/:postId/comments/:commentId/edit", requireLogin, async (req, res) => {
+  const { postId, commentId } = req.params;
+  const { comment } = req.body;   
 
-  res.redirect("back")
-})
+  await db.query(`
+    UPDATE comments
+    SET content = ?
+    WHERE id = ?
+  `, [comment, commentId]);
 
+  res.redirect("/view_posts/" + postId);
+});
 
 
 // Delete a post
@@ -614,7 +624,7 @@ app.post("/delete_post/:id", requireLogin, async (req, res) => {
 
 
 // Delete Comment
-app.post("/posts/:postId/comments/:commentId/delete", requireLogin, async (req, res) => {
+app.delete("/posts/:postId/comments/:commentId/delete", requireLogin, async (req, res) => {
   const { postId, commentId } = req.params
 
   await db.query(
@@ -622,7 +632,7 @@ app.post("/posts/:postId/comments/:commentId/delete", requireLogin, async (req, 
     [commentId, postId]
   )
 
-  res.redirect("back")
+  res.redirect("/view_posts/" + postId);
 })
 
 
@@ -643,52 +653,92 @@ app.get("/showjobs", requireLogin, async (req, res) => {
 })
 
 
+// GET A SINGLE JOB
+app.get("/jobs/:id", requireLogin, async (req, res) => {
+  const { id } = req.params;
+
+  const [[job]] = await db.query(`
+    SELECT 
+      j.post_id AS id,
+      p.title,
+      j.clinic,
+      j.salary,
+      j.description,
+      j.location,
+      j.contact,
+      j.user_id,
+      u.fname,
+      u.lname
+    FROM jobs j
+    JOIN posts p ON j.post_id = p.id
+    LEFT JOIN users u ON j.user_id = u.id
+    WHERE j.post_id = ?
+  `, [id]);
+
+  if (!job) return res.status(404).send("Job not found");
+
+  const isOwner = job.user_id === req.session.userId;
+
+  res.render("singlejob", { job, isOwner });
+});
+
 
 // route to create job
 app.post("/createJobs", requireLogin, async (req, res) => {
-  const { title, clinic, location, salary, contact, description } = req.body
-  const userId = req.session.userId
-  const postId = Date.now().toString()
+  const { clinic, location, salary, contact, description, title } = req.body;
 
-  // insert post
+  const userId = req.session.userId;
+  const postId = Date.now().toString(); // shared ID
+
+  // insert into posts
   await db.query(`
     INSERT INTO posts
     (id, user_id, type, title, location, contact)
     VALUES (?, ?, 'job', ?, ?, ?)
-  `, [postId, userId, title, location, contact])
+  `, [postId, userId, title, location, contact]);
 
-  // insert job details
+  // insert into jobs
   await db.query(`
     INSERT INTO jobs
-    (post_id, clinic, salary, description)
-    VALUES (?, ?, ?, ?)
-  `, [postId, clinic, salary, description])
+    (post_id, user_id, clinic, salary, description, location, contact)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `, [
+    postId,
+    userId,
+    clinic,
+    salary,
+    description,
+    location,
+    contact
+  ]);
 
-  res.redirect("/showjobs")
-})
+  res.redirect("/showjobs");
+});
+
 
 
 //EDIT JOBS
 app.put("/editjob/:id", requireLogin, async (req, res) => {
-  const { id } = req.params
-  const { title, clinic, location, salary, contact, description } = req.body
+  const { id } = req.params;
+  const { title, clinic, location, salary, contact, description } = req.body;
 
-  // update post
+  // update posts
   await db.query(`
     UPDATE posts
     SET title=?, location=?, contact=?
     WHERE id=?
-  `, [title, location, contact, id])
+  `, [title, location, contact, id]);
 
-  // update job details
+  // update jobs
   await db.query(`
     UPDATE jobs
-    SET clinic=?, salary=?, description=?
+    SET clinic=?, salary=?, description=?, location=?, contact=?
     WHERE post_id=?
-  `, [clinic, salary, description, id])
+  `, [clinic, salary, description, location, contact, id]);
 
-  res.redirect("/showjobs")
-})
+  res.redirect("/showjobs");
+});
+
 
 
 
@@ -735,8 +785,12 @@ app.get("/item/:id", requireLogin, async (req, res) => {
   `, [id])
 
   if (!item) return res.status(404).send("Item not found")
+  const isSaved = await db.query(
+    "SELECT * FROM saved_items WHERE user_id=? AND post_id=?",
+    [req.session.userId, id]
+  )
 
-  res.render("item", { item })
+  res.render("item", { item, isSaved: isSaved.length > 0 })
 })
 
 
@@ -975,18 +1029,69 @@ app.post(
 )
 
 // edit relationship
-app.post("/relationships/edit/:id", async (req, res) => {
-  const { id } = req.params
-  const { bio, city, contact } = req.body
+app.post(
+  "/relationships/edit/:id",
+  upload.array("images", 3),
+  async (req, res) => {
 
-  await db.query(`
-    UPDATE relationship_profiles
-    SET bio=?, city=?, contact=?
-    WHERE post_id=?
-  `, [bio, city, contact, id])
+    const { id } = req.params
 
-  res.redirect("/relationships/" + id)
-})
+    const {
+      name,
+      bio,
+      city,
+      sex,
+      looking_for,
+      age,
+      thought,
+      contact
+    } = req.body
+
+    const [[post]] = await db.query(
+      "SELECT user_id FROM posts WHERE id=?",
+      [id]
+    )
+
+    if (!post || post.user_id !== req.session.userId) {
+      return res.redirect("/relationships/" + id)
+    }
+
+    // existing images
+    const [[existing]] = await db.query(
+      "SELECT image1, image2, image3 FROM relationship_profiles WHERE post_id=?",
+      [id]
+    )
+
+    const files = req.files || []
+
+    const image1 = files[0]?.filename || existing.image1
+    const image2 = files[1]?.filename || existing.image2
+    const image3 = files[2]?.filename || existing.image3
+
+    await db.query(`
+      UPDATE relationship_profiles
+      SET name=?, bio=?, city=?, sex=?, looking_for=?, age=?, thought=?, contact=?,
+          image1=?, image2=?, image3=?
+      WHERE post_id=?
+    `, [
+      name,
+      bio,
+      city,
+      sex,
+      looking_for,
+      age,
+      thought,
+      contact,
+      image1,
+      image2,
+      image3,
+      id
+    ])
+
+    res.redirect("/relationships/" + id)
+  }
+)
+
 
 
 // delete relationhip

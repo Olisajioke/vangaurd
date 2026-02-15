@@ -1,6 +1,7 @@
 <%- include("partials/header") %>
 
-<div class="container mt-4">
+
+<div class="containersss mt-4 body">
 
   <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
 
@@ -103,3 +104,24 @@
 
 
 <%- include("partials/footer") %>
+
+
+
+<style>
+  .body {
+  background:
+    radial-gradient(900px 500px at 10% 10%, rgba(255,120,170,0.18), transparent 60%),
+    radial-gradient(800px 400px at 90% 20%, rgba(255,90,140,0.14), transparent 60%),
+    radial-gradient(700px 400px at 50% 100%, rgba(220,60,120,0.16), transparent 60%),
+    linear-gradient(180deg, #078992, #03999e);
+}
+
+.card.shadow-sm:hover {
+  box-shadow:
+    0 12px 34px rgba(0,0,0,0.3),
+    0 0 60px rgba(255,120,170,0.25);
+  transform: translateY(-2px);
+  transition: all .25s ease;
+}
+
+</style>

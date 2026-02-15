@@ -21,23 +21,23 @@
 
   <!-- Dark overlay -->
   <div
-    class="position-absolute w-100 h-100"
-    style="
-      top:0;
-      left:0;
-      background: rgba(0,0,0,0.45);
-      z-index: 2;
-    "></div>
+  class="position-absolute w-100 h-100 view-post-overlay"
+  style="top:0; left:0; background: rgba(0,0,0,0.45); z-index:2;">
+</div>
+
 
   <!-- Content -->
   <div class="position-relative" style="z-index:3;">
     <h1 class="display-4"><%= post.title %></h1>
-    <p class="lead"><%= post.subtitle %></p>
-    <p>By <strong><%= post.fname %></strong></p>
-     <p class="text-muted">on 
-    <%= new Date(post.created_at).toLocaleDateString() %>
-  </p>
+      <p class="lead fw-semibold text-white-75"><%= post.subtitle %></p>
+      <p class="mb-1 text-white">
+        By <strong><%= post.fname %> <%= post.lname %></strong>
+      </p>
+      <p class="small text-white-50">
+        <%= new Date(post.created_at).toLocaleDateString() %>
+      </p>
   </div>
+    
 
 </div>
 
@@ -54,208 +54,95 @@
       <a
         href="/new_clinic_stories?id=<%= post.id %>&mode=edit"
         class="btn btn-primary btn-light"
-      >
+      > <i class="fas fa-edit"></i>
         Edit Post
       </a>
 
       <button
-        type="button"
-        class="btn btn-danger btn-sm"
-        data-toggle="modal"
-        data-target="#deletePostModal"
-      >
-        Delete Post
-      </button>
-    </div>
-  </div>
+      class="btn btn-danger ms-2"
+      data-bs-toggle="modal"
+      data-bs-target="#deletePostModal-<%= post.id %>">
+      <i class="fas fa-trash-alt"></i> Delete
+    </button>
 
-  <!-- DELETE POST MODAL -->
-  <div
-    class="modal fade"
-    id="deletePostModal"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="deletePostModalLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <h5 class="modal-title" id="deletePostModalLabel">
-            Confirm Deletion
-          </h5>
-          <button type="button" class="close" data-dismiss="modal">
-            <span>&times;</span>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          Are you sure you want to delete this post? This action cannot be undone.
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-            Cancel
-          </button>
-
-          <form action="/delete_post/<%= post.id %>" method="POST">
-            <button type="submit" class="btn btn-danger">
-              Yes, Delete
-            </button>
-          </form>
-        </div>
-
-      </div>
     </div>
   </div>
 
   <!-- COMMENTS SECTION -->
-  <div class="card">
-    <div class="card-header text-center">
-      <h3>Comments</h3>
-    </div>
+    <!-- COMMENTS SECTION -->
+<div class="card mt-4">
+  <div class="card-header text-center">
+    <h4 class="mb-0">Comments</h4>
+  </div>
 
-    <div class="card-body comments-section">
+  <div class="card-body">
 
-      <% if (post.comments && post.comments.length > 0) { %>
-        <% post.comments.forEach(c => { %>
+    <% if (comments && comments.length > 0) { %>
+      <% comments.forEach(c => { %>
 
-          <% if (editCommentId == c.id) { %>
-            <!-- EDIT COMMENT -->
-            <form
-              method="POST"
-              action="/posts/<%= post.id %>/comments/<%= c.id %>/edit"
-              class="mb-3"
+        <div class="comment mb-3 p-3 border rounded">
+          <strong><%= c.fname %></strong>
+
+          <small class="text-muted d-block mb-1">
+            <%= new Date(c.created_at).toLocaleDateString() %>
+          </small>
+
+          <p class="mb-2"><%= c.content %></p>
+
+          <div class="d-flex gap-2">
+
+            <!-- EDIT -->
+            <button
+              class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#editCommentModal-<%= c.id %>"
             >
-              <input
-                type="text"
-                name="comment"
-                value="<%= c.comment %>"
-                class="form-control mb-2"
-                required
-              >
-              <button class="btn btn-sm btn-success">Save</button>
-              <a
-                href="/view_posts/<%= post.id %>"
-                class="btn btn-sm btn-secondary"
-              >
-                Cancel
-              </a>
-            </form>
+              Edit
+            </button>
 
-          <% } else { %>
-            <!-- VIEW COMMENT -->
-            <div class="comment mb-3 p-3 border rounded">
-              <strong><%= c.name %></strong>
-              <small class="text-muted d-block mb-1"><%= c.date %></small>
-              <p class="mb-2"><%= c.comment %></p>
+            <!-- DELETE -->
+            <button
+              class="btn btn-sm btn-danger"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteCommentModal-<%= c.id %>"
+            >
+              Delete
+            </button>
 
-              <a
-                href="/view_posts/<%= post.id %>?edit=<%= c.id %>"
-                class="btn btn-sm btn-outline-primary"
-              >
-                Edit
-              </a>
-
-              <button
-                type="button"
-                class="btn btn-sm btn-danger"
-                data-toggle="modal"
-                data-target="#deleteCommentModal-<%= c.id %>"
-              >
-                Delete
-              </button>
-
-              <!-- DELETE COMMENT MODAL -->
-              <div
-                class="modal fade"
-                id="deleteCommentModal-<%= c.id %>"
-                tabindex="-1"
-                role="dialog"
-                aria-hidden="true"
-              >
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content">
-
-                    <div class="modal-header">
-                      <h5 class="modal-title">
-                        Confirm Deletion
-                      </h5>
-                      <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                      </button>
-                    </div>
-
-                    <div class="modal-body">
-                      Are you sure you want to delete this comment?
-                    </div>
-
-                    <div class="modal-footer">
-                      <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-dismiss="modal"
-                      >
-                        Cancel
-                      </button>
-
-                      <form
-                        action="/posts/<%= post.id %>/comments/<%= c.id %>/delete"
-                        method="POST"
-                      >
-                        <button type="submit" class="btn btn-danger">
-                          Yes, Delete
-                        </button>
-                      </form>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% } %>
-
-        <% }) %>
-      <% } else { %>
-        <p class="text-center text-muted">
-          No comments yet. Be the first to comment!
-        </p>
-      <% } %>
-
-      <hr>
-
-      <!-- ADD COMMENT -->
-      <h4 class="text-center mb-3">Add a comment</h4>
-
-      <form action="/posts/<%= post.id %>/comments" method="POST">
-        <div class="form-group">
-          <input
-            type="text"
-            name="name"
-            class="form-control"
-            placeholder="Your name"
-            required
-          >
+          </div>
         </div>
 
-        <div class="form-group">
-          <textarea
-            name="comment"
-            class="form-control"
-            rows="3"
-            placeholder="Your comment"
-            required
-          ></textarea>
-        </div>
+      <% }) %>
+    <% } else { %>
+      <p class="text-center text-muted">
+        No comments yet. Be the first to comment!
+      </p>
+    <% } %>
 
-        <button type="submit" class="btn btn-primary">
-          Submit Comment
-        </button>
-      </form>
+    <hr>
 
-    </div>
+    <!-- ADD COMMENT -->
+    <h5 class="text-center mb-3">Add a comment</h5>
+
+    <form action="/posts/<%= post.id %>/comments" method="POST">
+      <textarea
+        name="comment"
+        class="form-control mb-3"
+        rows="3"
+        placeholder="Write your comment..."
+        required
+      ></textarea>
+
+      <button class="btn btn-primary w-100">
+        Submit Comment
+      </button>
+    </form>
+
   </div>
 </div>
+
+<%- include('partials/deletePostModal', { post }) %>
+<%- include('partials/editarticlecommentModal', { comments, post }) %>
+<%- include('partials/deletearticlecommentModal', { comments, post }) %>
 
 <%- include('partials/footer') %>

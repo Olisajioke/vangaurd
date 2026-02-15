@@ -1,0 +1,41 @@
+<% if (comments && comments.length > 0) { %>
+  <% comments.forEach(c => { %>
+
+    <div class="modal fade" id="editCommentModal-<%= c.id %>" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <form method="POST" action="/posts/<%= post.id %>/comments/<%= c.id %>/edit">
+
+            <div class="modal-header">
+              <h5 class="modal-title">Edit Comment</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <textarea
+                name="comment"
+                class="form-control"
+                rows="4"
+                required
+              ><%= c.content %></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-success">
+                Save Changes
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+  <% }) %>
+<% } %>

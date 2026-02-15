@@ -1,0 +1,36 @@
+<% if (comments && comments.length > 0) { %>
+  <% comments.forEach(c => { %>
+
+    <div class="modal fade" id="deleteCommentModal-<%= c.id %>" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <form method="POST" action="/posts/<%= post.id %>/comments/<%= c.id %>/delete">
+
+            <div class="modal-header">
+              <h5 class="modal-title">Delete Comment</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              Are you sure you want to delete this comment?
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+
+              <button class="btn btn-danger">
+                Yes, Delete
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+  <% }) %>
+<% } %>

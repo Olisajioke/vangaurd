@@ -8,27 +8,45 @@
   </div>
 
   <div class="row">
-    <% relationships.forEach(r => { %>
-      <div class="col-md-4 mb-4">
-        <div class="card rel-card">
-
-          <% if (r.image1) { %>
-            <img src="/uploads/<%= r.image1 %>" class="rel-avatar">
-          <% } %>
-
+    <% if (relationships.length === 0) { %>
+      <div class="col-12">
+        <div class="card rel-card text-center">
           <div class="card-body">
-            <h5 class="card-title"><%= r.name %>, <%= r.age %></h5>
-            <p class="mb-1"><strong>City:</strong> <%= r.city %></p>
-            <p class="mb-2"><strong>Looking for:</strong> <%= r.looking_for %></p>
-
-            <a href="/relationships/<%= r.post_id %>" class="btn btn-outline-danger btn-sm">
-              View Profile
+            <h5 class="card-title">No Connections Yet</h5>
+            <p class="mb-3">Start by creating your relationship profile.</p>
+            <a href="/create-relationship"
+               class="btn btn-primary text-white text-decoration-none">
+              Create Profile
             </a>
           </div>
-
         </div>
       </div>
-    <% }) %>
+    <% } else { %>
+
+      <% relationships.forEach(function(r) { %>
+        <div class="col-md-4 mb-4">
+          <div class="card rel-card">
+
+            <% if (r.image1) { %>
+              <img src="/uploads/<%= r.image1 %>" class="rel-avatar">
+            <% } %>
+
+            <div class="card-body">
+              <h5 class="card-title"><%= r.name %>, <%= r.age %></h5>
+              <p class="mb-1"><strong>City:</strong> <%= r.city %></p>
+              <p class="mb-2"><strong>Looking for:</strong> <%= r.looking_for %></p>
+
+              <a href="/relationships/<%= r.post_id %>"
+                 class="btn btn-outline-danger btn-sm">
+                View Profile
+              </a>
+            </div>
+
+          </div>
+        </div>
+      <% }) %>
+
+    <% } %>
   </div>
 
 </div>
