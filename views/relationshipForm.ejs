@@ -1,90 +1,155 @@
 <%- include("partials/header") %>
 
+<div class="container py-4">
 
-<div class="container mt-4">
+  <!-- HERO WITH IMAGE -->
+  <div class="jumbotron rel-hero-img"
+       style="background-image:url('images/create_memories.jpg')">
 
-  <!-- HERO -->
-  <div class="rel-hero">
-    <h2 class="mb-2">Find Meaningful Connection</h2>
-    <p class="mb-0">Share who you are and what you're looking for within the optometry community</p>
+    <div class="rel-hero-overlay">
+      <h2 class="mb-1 display-4 fw-bold">Find Meaningful Connection</h2>
+      <p class="mb-0 text-white-75 fw-lighter-bold">Share who you are and what you're looking for</p>
+    </div>
+
   </div>
 
-  <!-- FORM CARD -->
-  <div class="card rel-card">
-    <div class="card-body">
+  <!-- CENTERED FORM -->
+  <div class="row justify-content-center mt-4">
+    <div class="col-lg-7 col-md-9">
 
-      <form action="/create-relationship" method="POST" enctype="multipart/form-data">
+      <div class="card rel-card-sm">
+        <div class="card-body">
 
-        <!-- Name -->
-        <div class="form-floating mb-3">
-          <input type="text" name="name" class="form-control" placeholder="Name" required>
-          <label>Your Name</label>
+          <form action="/create-relationship" method="POST" enctype="multipart/form-data">
+
+            <!-- NAME + AGE -->
+            <div class="row g-2 mb-2">
+              <div class="col-md-8">
+                <div class="form-floating">
+                  <input type="text" name="name" class="form-control" placeholder="Name" required>
+                  <label>Name</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-floating">
+                  <input type="number" name="age" class="form-control" placeholder="Age">
+                  <label>Age</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- CITY + SEX -->
+            <div class="row g-2 mb-2">
+              <div class="col-md-7">
+                <div class="form-floating">
+                  <input type="text" name="city" class="form-control" placeholder="City">
+                  <label>City</label>
+                </div>
+              </div>
+              <div class="col-md-5">
+                <div class="form-floating">
+                  <select name="sex" class="form-select">
+                    <option value=""></option>
+                    <option>Male</option>
+                    <option>Female</option>
+                  </select>
+                  <label>Sex</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- LOOKING FOR -->
+            <div class="form-floating mb-2">
+              <select name="looking_for" class="form-select">
+                <option value=""></option>
+                <option>Relationship</option>
+                <option>Marriage</option>
+              </select>
+              <label>Looking For</label>
+            </div>
+
+            <!-- BIO -->
+            <div class="form-floating mb-2">
+              <textarea name="bio" class="form-control rel-textarea-sm" placeholder="Bio"></textarea>
+              <label>Short Bio</label>
+            </div>
+
+            <!-- THOUGHT -->
+            <div class="form-floating mb-2">
+              <textarea name="thought" class="form-control rel-textarea-sm" placeholder="Thought"></textarea>
+              <label>Personal Thought</label>
+            </div>
+
+            <!-- CONTACT -->
+            <div class="form-floating mb-3">
+              <input type="text" name="contact" class="form-control" placeholder="Contact">
+              <label>Contact (WhatsApp / Email)</label>
+            </div>
+
+            <!-- PHOTOS -->
+            <div class="mb-3">
+              <label class="form-label small text-muted mb-1">Photos (max 3)</label>
+              <input type="file" name="images" class="form-control form-control-sm" accept="image/*" multiple>
+            </div>
+            <button class="btn btn-danger w-100">
+              Create Profile
+            </button>
+
+          </form>
+
         </div>
-
-        <!-- Bio -->
-        <div class="form-floating mb-3">
-          <textarea name="bio" class="form-control" style="height:100px" placeholder="Bio"></textarea>
-          <label>Short Bio</label>
-        </div>
-
-        <!-- City -->
-        <div class="form-floating mb-3">
-          <input type="text" name="city" class="form-control" placeholder="City">
-          <label>City in KSA</label>
-        </div>
-
-        <!-- Sex -->
-        <div class="form-floating mb-3">
-          <select name="sex" class="form-select">
-            <option value="">Select</option>
-            <option>Male</option>
-            <option>Female</option>
-          </select>
-          <label>Sex</label>
-        </div>
-
-        <!-- Looking For -->
-        <div class="form-floating mb-3">
-          <select name="looking_for" class="form-select">
-            <option value="">Select</option>
-            <option>Relationship</option>
-            <option>Marriage</option>
-          </select>
-          <label>Looking For</label>
-        </div>
-
-        <!-- Age -->
-        <div class="form-floating mb-3">
-          <input type="number" name="age" class="form-control" placeholder="Age">
-          <label>Age</label>
-        </div>
-
-        <!-- Thought -->
-        <div class="form-floating mb-3">
-          <textarea name="thought" class="form-control" style="height:100px" placeholder="Thought"></textarea>
-          <label>Personal Thought</label>
-        </div>
-
-        <!-- Contact -->
-        <div class="form-floating mb-4">
-          <input type="text" name="contact" class="form-control" placeholder="Contact">
-          <label>Contact (WhatsApp / Email)</label>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Upload up to 3 photos</label>
-            <input type="file" name="images" class="form-control" accept="image/*" multiple>
-        </div>
-
-
-        <button class="btn btn-danger w-100 btn-lg">
-          Create Relationship Profile
-        </button>
-
-      </form>
+      </div>
 
     </div>
   </div>
 
 </div>
+
+
+<style>
+  /* HERO WITH IMAGE */
+.rel-hero-img {
+  height: 220px;
+  border-radius: 16px;
+  background: linear-gradient(135deg,#4b2e2b,#6a3f3a);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.rel-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(40,20,20,.45);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* SMALL CARD */
+.rel-card-sm {
+  border-radius: 14px;
+  border: 1px solid #eee;
+}
+
+/* COMPACT TEXTAREAS */
+.rel-textarea-sm {
+  height: 90px !important;
+  resize: none;
+}
+
+/* TIGHTER FLOATING LABEL SPACING */
+.form-floating > .form-control,
+.form-floating > .form-select {
+  height: 52px;
+  padding: 0.9rem 0.75rem;
+}
+
+</style>
 
 <%- include("partials/footer") %>

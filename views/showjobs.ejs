@@ -6,228 +6,174 @@
        url('./images/job_logo.jpg') center/cover no-repeat;">
   <div class="container">
     <h1 class="display-5 fw-bold">Job Vacancies</h1>
-    <p class="lead mb-4">Opportunities across trusted clinics</p>
+    <p class="lead mb-4 text-white-75">Opportunities across trusted clinics</p>
     <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createJobModal">
       + Post Job
     </button>
   </div>
 </section>
 
-<div class="container my-5">
-  <% if (jobs.length === 0) { %>
-    <p>No jobs available. Create one</p>
-  <% } %>
-
-  <div class="row g-4">
-    <% jobs.forEach(job => { %>
-      <div class="col-md-6 col-lg-4">
-        <div class="flip-card job-card">
-          <div class="flip-card-inner">
-
-            <!-- FRONT -->
-            <div class="flip-card-front card shadow-sm job-front">
-              <div class="job-front-header">
-                <h5 class="job-title mb-0"><%= job.title %></h5>
-                <span class="job-badge">Wanted</span>
-              </div>
-
-              <div class="card-body">
-                <p class="job-clinic mb-2"> Clinic:
-                  <i class="fas fa-clinic-medical me-2"></i>
-                  <%= job.clinic %>
-                </p>
-
-                <p class="job-location mb-3">Located in:  
-                  <i class="fas fa-map-marker-alt me-2"></i>
-                  <%= job.location %>
-                </p>
-
-                <div class="job-salary-front"> <p class="mb-0">Salary: </p>
-                  ر.س <%= job.salary %>
-                </div>
-              </div>
-            </div>
-
-
-            <!-- BACK -->
-            <div class="flip-card-back card text-white bg-dark">
-              <div class="card-header fw-bold text-center">
-                Job Details
-              </div>
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="job-text">
-                  <p class="mb-2"><%= job.description %></p>
-                  <p class="mb-0"><strong>Contact:</strong> <%= job.contact %></p>
-                </div>
-
-                 <hr>
-                  <div class="text-center mt-3">
-
-                  <a href="/jobs/<%= job.id %>" 
-                    class="btn btn-success btn-sm me-2">
-                    View
-                  </a>
-
-                  <button class="btn btn-outline-light btn-sm me-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editJobModal-<%= job.id %>">
-                    Edit
-                  </button>
-
-                  <button class="btn btn-danger btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deleteJobModal-<%= job.id %>">
-                    Delete
-                  </button>
-
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
+<!-- SEARCH BAR -->
+<section class="clinic-search py-4 bg-light border-bottom">
+  <div class="container">
+    <form action="/jobs" method="GET" class="mx-auto" style="max-width:600px;">
+      <div class="input-group input-group-lg shadow-sm">
+        <input 
+          type="text" 
+          name="clinic"
+          class="form-control border-0"
+          placeholder="Search job by Salary, Location, title or name..."
+          value="<%= typeof query !== 'undefined' ? query : '' %>"
+        >
+        <button class="btn btn-success px-4" type="submit">
+          🔍 Search
+        </button>
       </div>
-
-      <%- include("partials/editJobModal", { job }) %>
-      <%- include("partials/deleteJobModal", { job }) %>
-
-    <% }) %>
+    </form>
   </div>
-</div>
+</section>
+
+<section class="jobs-listing py-5">
+  <div class="container">
+
+    <% if (!jobs || jobs.length === 0) { %>
+      <div class="text-center text-muted py-5">
+        <h5 class="mb-3">No jobs available</h5>
+        <button class="btn btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#createJobModal">
+          Post the first job
+        </button>
+      </div>
+    <% } %>
+
+    <div class="row g-4">
+
+      <% jobs.forEach(job => { %>
+        <div class="col-12 col-md-6 col-lg-4 job-card"
+            data-clinic="<%= (job.clinic || '').toLowerCase() %>"
+            data-title="<%= (job.title || '').toLowerCase() %>"
+            data-location="<%= (job.location || '').toLowerCase() %>"
+            data-salary="<%= (job.salary || '').toString().toLowerCase() %>">
+
+          <div class="job-flip-card">
+            <div class="job-flip-card-inner">
+
+              <!-- FRONT -->
+              <div class="job-flip-card-front card shadow-sm job-front">
+                <div class="job-front-header">
+                  <h5 class="job-title mb-0"><%= job.title %></h5>
+                  <span class="job-badge">Wanted</span>
+                </div>
+
+                <div class="card-body">
+                  <p class="job-clinic mb-2">
+                    <i class="fas fa-clinic-medical me-2"></i>
+                    <%= job.clinic %>
+                  </p>
+
+                  <p class="job-location mb-3">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    <%= job.location %>
+                  </p>
+
+                  <div class="job-salary-front">
+                    <small class="text-muted">Salary</small><br>
+                    ر.س <%= job.salary %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BACK -->
+              <div class="job-flip-card-back card text-white bg-dark">
+                <div class="card-header fw-bold text-center">
+                  Job Details
+                </div>
+
+                  <div class="card-body">
+                    <div class="job-text">
+                      <p class="mb-2">
+                        <%= job.description && job.description.length > 200
+                              ? job.description.substring(0, 200) + "..."
+                              : job.description %>
+                      </p>
+
+                      <p class="mb-0"><strong>Contact:</strong> <%= job.contact %></p>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-center mt-2">
+
+                    <a href="/jobs/<%= job.id %>" class="btn btn-success btn-sm me-2">
+                      View
+                    </a>
+                    <% if (currentUserId === job.user_id || isAdmin) { %>
+                      <button class="btn btn-outline-light btn-sm me-2"
+                              data-bs-toggle="modal"
+                              data-bs-target="#editJobModal-<%= job.id %>">
+                        Edit
+                      </button>
+
+                      <button class="btn btn-danger btn-sm"
+                              data-bs-toggle="modal"
+                              data-bs-target="#deleteJobModal-<%= job.id %>">
+                        Delete
+                      </button>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <%- include("partials/editJobModal", { job }) %>
+        <%- include("partials/deleteJobModal", { job }) %>
+
+      <% }) %>
+
+    </div>
+  </div>
+</section>
+
 
 <%- include("partials/createJobModal") %>
 
-<style>
-.hero-jobs {
-  height: 45vh;
-}
-
-/* Container */
-.job-card {
-  height: 320px;
-  perspective: 1000px;
-}
-
-/* Rotator */
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-}
-
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
-/* Faces */
-.flip-card-front,
-.flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  backface-visibility: hidden;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-/* Front gold */
-.flip-card-front {
-  background: linear-gradient(135deg, #d4af37, #c9a227);
-  color: #1a1a1a;
-}
 
 
-.job-front {
-  background: linear-gradient(180deg, #f4ecd3, #efe4bf);
-  color: #1a1a1a;
-  border: 1px solid rgba(185,150,46,0.25);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
-}
 
 
-/* Header band */
-.job-front-header {
-  background: linear-gradient(135deg, #1e7e34, #17642a);
-  color: white;
-  padding: 0.9rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
-/* Title */
-.job-title {
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: .2px;
-}
 
-/* Wanted badge */
-.job-badge {
-  background: #d4af37;
-  color: #1a1a1a;
-  font-weight: 600;
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-}
 
-/* Clinic / location */
-.job-clinic {
-  font-weight: 600;
-  color: #1a1a1a;
-}
+<script>
+  const searchInput = document.querySelector('input[name="clinic"]');
+  const jobCards = document.querySelectorAll('.job-card');
 
-.job-location {
-  color: #555;
-}
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      const value = this.value.toLowerCase().trim();
 
-/* Salary highlight */
-.job-salary-front {
-  background: rgba(212,175,55,0.12);
-  color: #b8962e;
-  font-weight: 700;
-  font-size: 1.1rem;
-  padding: 0.35rem 0.6rem;
-  border-radius: 6px;
-  display: inline-block;
-}
+      jobCards.forEach(card => {
+        const clinic = card.dataset.clinic || "";
+        const title = card.dataset.title || "";
+        const location = card.dataset.location || "";
+        const salary = card.dataset.salary || "";
 
-/* Back */
-.flip-card-back {
-  transform: rotateY(180deg);
-}
+        const searchableText = clinic + " " + title + " " + location + " " + salary;
 
-/* Header styling harmony */
-.flip-card-front .card-header {
-  background: rgba(0,0,0,0.08);
-}
+        if (searchableText.includes(value)) {
+          card.style.display = "";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  }
+</script>
 
-.flip-card-back .card-header {
-  background: rgba(255,255,255,0.08);
-}
-
-/* Hover lift */
-.job-card:hover {
-  transform: translateY(-6px) scale(1.03);
-}
-
-.job-text {
-  max-height: 150px;
-  overflow: hidden;
-}
-.job-text p:first-child {
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-</style>
 
 <%- include("partials/footer") %>

@@ -50,26 +50,28 @@
       <%- post.content %>
     </div>
 
-    <div class="card-footer">
-      <a
-        href="/new_clinic_stories?id=<%= post.id %>&mode=edit"
-        class="btn btn-primary btn-light"
-      > <i class="fas fa-edit"></i>
-        Edit Post
-      </a>
+    <% if (currentUserId === post.user_id || isAdmin) { %>
+      <div class="card-footer">
+          <a href="/new_clinic_stories?id=<%= post.id %>&mode=edit"
+            class="btn btn-primary btn-light">
+            <i class="fas fa-edit"></i>
+            Edit Post
+          </a>
 
-      <button
-      class="btn btn-danger ms-2"
-      data-bs-toggle="modal"
-      data-bs-target="#deletePostModal-<%= post.id %>">
-      <i class="fas fa-trash-alt"></i> Delete
-    </button>
+          <button
+            class="btn btn-danger ms-2"
+            data-bs-toggle="modal"
+            data-bs-target="#deletePostModal-<%= post.id %>">
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
+      </div>
+    <% } %>
+
 
     </div>
   </div>
 
   <!-- COMMENTS SECTION -->
-    <!-- COMMENTS SECTION -->
 <div class="card mt-4">
   <div class="card-header text-center">
     <h4 class="mb-0">Comments</h4>
@@ -81,37 +83,30 @@
       <% comments.forEach(c => { %>
 
         <div class="comment mb-3 p-3 border rounded">
-          <strong><%= c.fname %></strong>
+          <strong>Dr. <%= c.fname %></strong>
 
           <small class="text-muted d-block mb-1">
             <%= new Date(c.created_at).toLocaleDateString() %>
           </small>
 
           <p class="mb-2"><%= c.content %></p>
+          <% if (currentUserId === c.user_id || isAdmin) { %>
+            <div class="d-flex gap-2">
+              <button
+                class="btn btn-sm btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#editCommentModal-<%= c.id %>">
+                Edit
+              </button>
 
-          <div class="d-flex gap-2">
-
-            <!-- EDIT -->
-            <button
-              class="btn btn-sm btn-outline-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#editCommentModal-<%= c.id %>"
-            >
-              Edit
-            </button>
-
-            <!-- DELETE -->
-            <button
-              class="btn btn-sm btn-danger"
-              data-bs-toggle="modal"
-              data-bs-target="#deleteCommentModal-<%= c.id %>"
-            >
-              Delete
-            </button>
-
-          </div>
-        </div>
-
+              <button
+                class="btn btn-sm btn-danger"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteCommentModal-<%= c.id %>">
+                Delete
+              </button>
+            </div>
+          <% } %>
       <% }) %>
     <% } else { %>
       <p class="text-center text-muted">

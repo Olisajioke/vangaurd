@@ -10,16 +10,41 @@
   </div>
 </section>
 
+
+<!-- STORY SEARCH -->
+<section class="clinic-search py-4 bg-light border-bottom">
+  <div class="container">
+    <div class="mx-auto" style="max-width:600px;">
+      <div class="input-group input-group-lg shadow-sm">
+        <input 
+          type="text"
+          id="storySearch"
+          class="form-control border-0"
+          placeholder="Search stories by title or clinic..."
+        >
+        <span class="input-group-text bg-success text-white">
+          🔍
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <main class="container my-5">
   <% if (posts && posts.length > 0) { %>
     <div class="row g-4">
       <% posts.forEach(function(post) { %>
-        <div class="col-md-6 col-lg-4">
-          <div class="flip-card story-card">
-            <div class="flip-card-inner">
+        <div class="col-md-6 col-lg-4 story-card-wrap"
+          data-title="<%= (post.title || '').toLowerCase() %>"
+          data-subtitle="<%= (post.subtitle || '').toLowerCase() %>"
+          data-author="<%= (post.fname || '').toLowerCase() %>">
+
+          <div class="story-flip-card story-card">
+            <div class="story-flip-card-inner">
 
               <!-- FRONT -->
-              <div class="flip-card-front card shadow-sm">
+              <div class="story-flip-card-front card shadow-sm">
                 <div class="card-header fw-bold text-center">
                   <%= post.title %>
                 </div>
@@ -39,7 +64,7 @@
               </div>
 
               <!-- BACK -->
-              <div class="flip-card-back card text-white bg-dark">
+              <div class="story-flip-card-back card text-white bg-dark">
                 <div class="card-header fw-bold text-center">
                   Story Preview
                   <div style="color:red;font-size:12px">
@@ -72,105 +97,28 @@
   <% } %>
 </main>
 
-<style>
-/* HERO */
-.hero-stories {
-  height: 45vh;
-  background: url('/images/forum.jpg') center/cover no-repeat;
-  position: relative;
-}
 
-.hero-stories .hero-overlay {
-  position: absolute;
-  inset: 0;
-  backdrop-filter: blur(6px);
-  background: rgba(0,0,0,0.45);
-}
 
-/* CARD */
-.story-card {
-  height: 340px;
-  perspective: 1000px;
-}
 
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-}
+<script>
+  const storyInput = document.getElementById("storySearch");
+  const storyCards = document.querySelectorAll(".story-card-wrap");
 
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
+  if (storyInput) {
+    storyInput.addEventListener("input", function () {
+      const q = this.value.toLowerCase().trim();
 
-.flip-card-front,
-.flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  backface-visibility: hidden;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
+      storyCards.forEach(card => {
+        const text =
+          (card.dataset.title || "") +
+          (card.dataset.subtitle || "") +
+          (card.dataset.author || "");
 
-/* FRONT IMAGE AREA */
-.card-img-wrapper {
-  position: relative;
-  height: calc(100% - 48px); /* minus header */
-}
+        card.style.display = text.includes(q) ? "" : "none";
+      });
+    });
+  }
+</script>
 
-.card-img-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* OVERLAY TEXT */
-.image-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.15));
-  display: flex;
-  align-items: flex-end;
-}
-
-.overlay-text {
-  padding: 1rem;
-  color: white;
-}
-
-.overlay-text .subtitle {
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.overlay-text .author {
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-/* BACK */
-.flip-card-back {
-  transform: rotateY(180deg);
-}
-
-/* HOVER LIFT */
-.story-card:hover {
-  transform: translateY(-6px) scale(1.03);
-}
-
-/* HEADER STYLE BALANCE */
-.flip-card-front .card-header {
-  background: rgba(0,0,0,0.05);
-}
-
-.flip-card-back .card-header {
-  background: rgba(255,255,255,0.08);
-}
-</style>
 
 <%- include("partials/footer") %>

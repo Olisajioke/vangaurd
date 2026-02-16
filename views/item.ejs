@@ -1,23 +1,20 @@
 <%- include("partials/header") %>
 
-<div class="container mt-4">
+<div class="container py-4">
 
-  <div class="card shadow-lg">
-    <div class="card-body">
+  <div class="row g-4">
 
-      <!-- BIG IMAGE CAROUSEL -->
+    <!-- IMAGE GALLERY -->
+    <div class="col-lg-7">
       <% if (item.images && item.images.length > 0) { %>
-        <div id="itemCarousel-<%= item.id %>" class="carousel slide mb-4">
-          <div class="carousel-inner">
+        <div id="itemCarousel-<%= item.id %>" class="carousel slide item-gallery">
 
+          <div class="carousel-inner rounded shadow-sm">
             <% item.images.forEach((img, index) => { %>
               <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                <img src="/uploads/<%= img %>"
-                     class="d-block w-100 rounded"
-                     style="max-height:500px;object-fit:contain;">
+                <img src="/uploads/<%= img %>" class="d-block w-100 gallery-image">
               </div>
             <% }) %>
-
           </div>
 
           <% if (item.images.length > 1) { %>
@@ -30,49 +27,98 @@
                     data-bs-target="#itemCarousel-<%= item.id %>" data-bs-slide="next">
               <span class="carousel-control-next-icon"></span>
             </button>
+
+            <div class="carousel-indicators position-static mt-3">
+              <% item.images.forEach((img, index) => { %>
+                <button type="button"
+                        data-bs-target="#itemCarousel-<%= item.id %>"
+                        data-bs-slide-to="<%= index %>"
+                        class="<%= index === 0 ? 'active' : '' %>">
+                </button>
+              <% }) %>
+            </div>
           <% } %>
-          <div class="d-flex justify-content-between align-items-start">
-  <h4 class="card-title"><%= item.title %></h4>
+
+        </div>
+      <% } %>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="col-lg-5">
+
+      <!-- TITLE + HEART -->
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <h2 class="fw-bold mb-0"><%= item.title %></h2>
 
         <form action="/toggle-save/<%= item.id %>" method="POST">
-            <button class="btn btn-link fs-4 p-0 border-0">
+          <button class="btn btn-link fs-3 p-0 border-0">
             <% if (isSaved) { %>❤️<% } else { %>🤍<% } %>
-            </button>
+          </button>
         </form>
+      </div>
+
+      <!-- PRICE -->
+      <div class="item-price mb-3">
+        ر.س <%= item.price %>
+      </div>
+
+      <!-- INFO CARD -->
+      <div class="item-info-card mb-4">
+
+        <div class="info-row">
+          <div class="info-label">Seller</div>
+          <div class="info-value"><%= item.seller %></div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Condition</div>
+          <div class="info-value">
+            <%= item.condition_note || "Not specified" %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Contact</div>
+          <div class="info-value"><a href="https://wa.me/<%= String(item.contact).replace(/\D/g,'') %>"
+                      target="_blank"
+                      class="btn btn-success me-2">
+                      <i class="fab fa-whatsapp me-1"></i>
+                      WhatsApp
+                  </a>
+          </div>
+        </div>
+
+
+        <div class="info-row">
+          <div class="info-label">Location</div>
+          <div class="info-value"><%= item.location %></div>
+        </div>
+
+      </div>
+
+      <!-- DESCRIPTION -->
+      <% if (item.content) { %>
+        <div class="item-description-block mb-4">
+          <div class="section-title">Description</div>
+          <div class="section-body">
+            <%= item.content %>
+          </div>
         </div>
       <% } %>
 
-      <!-- DETAILS -->
-      <h2 class="mb-3"><%= item.title %></h2>
+      <!-- ACTIONS -->
+      <div class="d-flex gap-2">
+        <a href="/market" class="btn btn-outline-secondary">
+          ← Back
+        </a>
 
-      <h4 class="text-success mb-3">ر.س <%= item.price %></h4>
-
-      <p><strong>Seller:</strong> <%= item.seller %></p>
-      <p><strong>Contact:</strong> <%= item.contact %></p>
-      <p><strong>Location:</strong> <%= item.location %></p>
-
-      <hr>
-
-      <p><%= item.description %></p>
-
-      <a href="/market" class="btn btn-outline-secondary mt-3">
-        ← Back to Market
-      </a>
-        <form action="/toggle-save/<%= item.id %>" method="POST">
-            <button class="btn btn-link fs-3 border-0">
-                <% if (isSaved) { %>❤️ Saved<% } else { %>🤍 Save<% } %>
-            </button>
-        </form>
-
-      <form action="/saveitem/<%= item.id %>" method="POST" class="d-inline">
-        <button class="btn btn-warning">
-            Save Item
-        </button>
-        </form>
-        <a href="/saved" class="btn btn-outline-secondary">View Saved</a>
-
+        <a href="/saved" class="btn btn-outline-dark">
+          Saved Items
+        </a>
+      </div>
 
     </div>
+
   </div>
 
 </div>

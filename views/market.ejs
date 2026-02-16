@@ -54,43 +54,43 @@
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title"><%= item.title %></h5>
                 <p class="card-text text-truncate"><%= item.description %></p>
-
                 <div class="mt-auto d-flex justify-content-between align-items-center">
-                  <div class="btn-group">
+                  <% if (item.user_id === userId) { %>
+                    <div class="btn-group">
+                      <a href="/item/<%= item.id %>" class="btn btn-sm btn-outline-secondary">
+                        View
+                      </a>
+
+                      <button class="btn btn-sm btn-outline-primary"
+                              data-bs-toggle="modal"
+                              data-bs-target="#editItemModal-<%= item.id %>">
+                        Edit
+                      </button>
+
+                      <button class="btn btn-sm btn-outline-danger"
+                              data-bs-toggle="modal"
+                              data-bs-target="#deleteItemModal-<%= item.id %>">
+                        Delete
+                      </button>
+                    </div>
+                  <% } else { %>
                     <a href="/item/<%= item.id %>" class="btn btn-sm btn-outline-secondary">
                       View
                     </a>
-
-                    <button class="btn btn-sm btn-outline-primary"
-                            data-bs-toggle="modal"
-                            data-bs-target="#editItemModal-<%= item.id %>">
-                      Edit
-                    </button>
-
-                    <button class="btn btn-sm btn-outline-danger"
-                            data-bs-toggle="modal"
-                            data-bs-target="#deleteItemModal-<%= item.id %>">
-                      Delete
-                    </button>
-                  </div>
-
+                  <% } %>
                   <small class="text-body-secondary">ر.س <%= item.price %></small>
                 </div>
               </div>
-
               <div class="card-footer bg-white border-0 d-flex justify-content-between">
                 <span class="text-muted small"><%= item.seller %></span>
-
-                <% 
-                  const currentUser = db?.users?.[0];
-                  const isSaved = currentUser?.savedItems?.includes(item.id) || false;
-                %>
+                <% const isSaved = savedIds.includes(item.id); %>
                 <form action="/toggle-save/<%= item.id %>" method="POST">
                   <button class="btn btn-link p-0 border-0" title="Save">
                     <% if (isSaved) { %>❤️<% } else { %>🤍<% } %>
                   </button>
                 </form>
               </div>
+
             </div>
           </div>
 

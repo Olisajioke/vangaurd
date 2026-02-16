@@ -7,13 +7,51 @@
   <div class="hero-overlay"></div>
   <div class="container position-relative">
     <h1 class="display-5 fw-bold">Clinic Reviews</h1>
-    <p class="lead mb-4">Honest experiences from optometrists across the Kingdom</p>
+    <p class="lead mb-4 text-white-75">Honest experiences from optometrists across the Kingdom</p>
     <a href="/reviews/new" class="btn btn-success btn-lg">Write a Review</a>
   </div>
 </section>
 
+
+<!-- Search Bar -->
+<section class="clinic-search py-4 bg-light border-bottom">
+  <div class="container">
+    <form action="/reviews" method="GET" class="mx-auto" style="max-width:600px;">
+      <div class="input-group input-group-lg shadow-sm">
+        <input 
+          type="text" 
+          name="clinic"
+          class="form-control border-0"
+          placeholder="Search clinic name..."
+          value="<%= typeof query !== 'undefined' ? query : '' %>"
+        >
+        <button class="btn btn-success px-4" type="submit">
+          🔍 Search
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+
 <div class="container my-5">
   <div class="row mb-2">
+
+    <% if (!reviews || reviews.length === 0) { %>
+      <div class="col-12 text-center py-5">
+        <h4 class="text-muted mb-3">
+          No clinic reviews found
+          <% if (typeof query !== 'undefined' && query) { %>
+            for "<%= query %>"
+          <% } %>
+        </h4>
+
+        <a href="/reviews" class="btn btn-outline-success">
+          View all reviews
+        </a>
+      </div>
+    <% } %>
+
     <% reviews.forEach(r => { %>
       <div class="col-md-6">
         <div class="row g-0 border rounded overflow-hidden mb-4 shadow-sm h-100">
@@ -55,58 +93,9 @@
         </div>
       </div>
     <% }) %>
+
   </div>
 </div>
 
-<style>
-/* Hero */
-.hero-reviews {
-  height: 45vh;
-  background: url('/images/clinic-hero.jpg') center/cover no-repeat;
-  position: relative;
-}
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-}
-
-/* Flip cards */
-.flip-card {
-  perspective: 1000px;
-  height: 200px;
-}
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-}
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
-.flip-card-front {
-  background: linear-gradient(135deg, #d4af37, #c9a227);
-  color: #1a1a1a;
-}
-
-.flip-card-front,
-
-.flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  border-radius: .75rem;
-}
-.flip-card-back {
-  transform: rotateY(180deg);
-}
-.border {
-  border-color: rgba(201,162,39,.4) !important;
-}
-
-</style>
 
 <%- include("partials/footer") %>

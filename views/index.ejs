@@ -1,226 +1,230 @@
 <%- include("partials/header") %>
-  <div class="px-4 pt-5 my-5 text-center border-bottom"> 
-    <h1 class="display-4 fw-bold text-body-emphasis  text-white">Optometrists Vanguard</h1> 
-      <div class="col-lg-6 mx-auto"> 
-        <p class="lead mb-4"> 
-              We are a community of Nigerian optometrists living and practicing in Saudi Arabia. Our platform was created to make the journey of settling into the Kingdom easier, friendlier, and more rewarding for fellow colleagues.Here you’ll find practical advice, shared experiences, and resources to help you navigate both professional and everyday life. From learning simple Arabic phrases for smoother communication, to tips on adapting to local culture, we make sure no one feels alone in the process. We also provide spaces to connect: a job board for new opportunities, and a small marketplace where members can buy and sell equipment or household items — especially useful when moving between cities within the Kingdom. At the heart of it all, this is a family-friendly hub where older colleagues pass down wisdom, newer colleagues find support, and together we grow into a stronger, thriving network of Nigerian optometrists in Saudi Arabia.</p> 
-       <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5"> 
-          <a href="/add_new_user" 
-            class="btn btn-primary btn-lg px-4 me-sm-3">
-            Log In
-          </a> 
 
-          <a href="/add_new_user" 
-            class="btn btn-outline-secondary btn-lg px-4">
-            Register
-          </a> 
-        </div>
-      </div> 
-      <div class="overflow-hidden" style="max-height: 50vh;"> 
-        <div class="container px-5"> 
-          <img src="./images/opt.jpg" class="img-fluid border rounded-3 shadow-lg mb-4" alt="moving van" width="700" height="500" loading="lazy"> 
-        </div> 
-    </div> 
-  </div>
+<!-- HERO -->
+<section class="homehero-section text-white text-center d-flex align-items-center">
+  <div class="container py-5">
+    <h1 class="display-4 fw-bold mb-3">Optometrists Vanguard</h1>
 
-  <div class="container px-4 py-5" id="featured-3"> 
-    <h2 class="pb-2 border-bottom text-center">Why Join Us?</h2> 
-    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3"> 
-      
-      <div class="feature col"> 
-        <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3">  
-          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-prescription2" viewBox="0 0 16 16">
-              <path d="M7 6h2v2h2v2H9v2H7v-2H5V8h2z"/>
-              <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v10.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 14.5V4a1 1 0 0 1-1-1zm2 3v10.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V4zM3 3h10V1H3z"/>
-              <use xlink:href="#collection"></use>
-          </svg>
-        </div> 
-        <h3 class="fs-2 text-body-emphasis">Professional Growth</h3> 
-        <p>
-          Stay informed with up-to-date resources, clinical insights, and practical tips tailored for optometrists practicing in Saudi Arabia. There are colleagues willing to teach you Arabic to help you adapt and excel in a new healthcare environment.
-        </p> 
-        <a href="/articles" class="icon-link">
-          read more
-          
-          <svg class="bi" aria-hidden="true">
-            <use xlink:href="/articles"></use>
-          </svg> 
-          
-        </a> 
-      </div> 
-      
-      <div class="feature col"> 
-        <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3">  
-          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-people-fill" viewBox="0 0 16 16">
-            <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
-            <use xlink:href="#people-circle"></use>
-          </svg>
-        </div> 
-        <h3 class="fs-2 text-body-emphasis">Strong Network and Support</h3> 
-        <p>
-          More than colleagues, we are family. Connect with fellow Nigerian optometrists who understand your journey. Share experiences, seek advice, and build lasting relationships that strengthen both your career and your personal well-being.
-        </p> 
-        <a href="#" class="icon-link">
-          Join the community
-          <svg class="bi" aria-hidden="true">
-            <use xlink:href="/add_new_user"></use>
-          </svg> 
-        </a> 
-      </div> 
-      
-      <div class="feature col"> 
-        <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3"> 
-          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-airplane-engines" viewBox="0 0 16 16">
-            <path d="M8 0c-.787 0-1.292.592-1.572 1.151A4.35 4.35 0 0 0 6 3v3.691l-2 1V7.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.191l-1.17.585A1.5 1.5 0 0 0 0 10.618V12a.5.5 0 0 0 .582.493l1.631-.272.313.937a.5.5 0 0 0 .948 0l.405-1.214 2.21-.369.375 2.253-1.318 1.318A.5.5 0 0 0 5.5 16h5a.5.5 0 0 0 .354-.854l-1.318-1.318.375-2.253 2.21.369.405 1.214a.5.5 0 0 0 .948 0l.313-.937 1.63.272A.5.5 0 0 0 16 12v-1.382a1.5 1.5 0 0 0-.83-1.342L14 8.691V7.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v.191l-2-1V3c0-.568-.14-1.271-.428-1.849C9.292.591 8.787 0 8 0M7 3c0-.432.11-.979.322-1.401C7.542 1.159 7.787 1 8 1s.458.158.678.599C8.889 2.02 9 2.569 9 3v4a.5.5 0 0 0 .276.447l5.448 2.724a.5.5 0 0 1 .276.447v.792l-5.418-.903a.5.5 0 0 0-.575.41l-.5 3a.5.5 0 0 0 .14.437l.646.646H6.707l.647-.646a.5.5 0 0 0 .14-.436l-.5-3a.5.5 0 0 0-.576-.411L1 11.41v-.792a.5.5 0 0 1 .276-.447l5.448-2.724A.5.5 0 0 0 7 7z"/>
-            <use xlink:href="#toggles2"></use>
-          </svg> 
-        </div> 
-        <h3 class="fs-2 text-body-emphasis">Cultural & Personal Enrichment</h3> 
-        <p>
-          Life in Saudi can feel new and different, but you don’t have to figure it all out alone. You’ll learn directly from Nigerian optometrists who’ve been here longer — from handy Arabic phrases to little everyday tips that make settling in smoother (and a lot more fun!)
-        </p> 
-        <a href="/add_new_user" class="icon-link">
-          Join the community
-          <svg class="bi" aria-hidden="true">
-            <use xlink:href="#chevron-right"></use>
-          </svg> 
-        </a> 
-      </div> 
-    </div> 
-  </div>
+    <p class="lead mx-auto mb-4 text-white-75" style="max-width:800px;">
+      We are a community of Nigerian optometrists living and practicing in Saudi Arabia. 
+      Our platform was created to make the journey of settling into the Kingdom easier, 
+      friendlier, and more rewarding for fellow colleagues. Here you’ll find practical 
+      advice, shared experiences, and resources to help you navigate both professional 
+      and everyday life. From learning simple Arabic phrases for smoother communication, 
+      to tips on adapting to local culture, we make sure no one feels alone in the process. 
+      We also provide spaces to connect: a job board for new opportunities, and a small 
+      marketplace where members can buy and sell equipment or household items — especially 
+      useful when moving between cities within the Kingdom. At the heart of it all, this is 
+      a family-friendly hub where older colleagues pass down wisdom, newer colleagues find 
+      support, and together we grow into a stronger, thriving network of Nigerian optometrists 
+      in Saudi Arabia.
+    </p>
 
-
-
-
-  <!-- MEET CUTE -->
-<div class="container my-5">
-  <div class="row featurette align-items-center">
-
-    <!-- LEFT: TEXT -->
-    <div class="col-md-7">
-      <h2 class="featurette-heading fw-bold lh-1">
-        MEET CUTE ZONE
-        <hr>
-        <span class="text-body-secondary">Find your spark.</span>
-      </h2>
-
-      <p class="lead">
-        Tired of endless searching and awkward introductions? Step into our 
-        Meet Cute Zone — a space designed for genuine connections, shared 
-        interests, and meaningful companionship. Whether you're looking for 
-        friendship, romance, or something beautifully unexpected, our 
-        relationship page helps you discover people who truly match your vibe.
-      </p>
-
-      <!-- ✅ BUTTON NOW UNDER TEXT -->
-      <a href="/relationships" class="btn btn-danger btn-lg mt-3 px-4">
-        Find Love & Companionship
-      </a>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="/login" class="btn btn-primary btn-lg px-4">Log In</a>
+      <a href="/add_new_user" class="btn btn-outline-light btn-lg px-4">Register</a>
     </div>
 
-    <!-- RIGHT: CAROUSEL -->
-    <div class="col-md-5">
-      <div id="meetCuteCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="homehero-image mt-5">
+      <img src="./images/opt.jpg" class="img-fluid rounded-4 shadow-lg" width="720">
+    </div>
+  </div>
+</section>
+
+<!-- WHY JOIN -->
+<section class="py-5 hbg-soft">
+  <div class="container">
+    <h2 class="text-center mb-5 fw-bold">Why Join Us?</h2>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="feature-card h-100">
+          <div class="feature-icon">
+            <div class="feature-icon">
+              <i class="fa-solid fa-prescription"></i>
+            </div>
+          </div>
+          <h4>Professional Growth</h4>
+          <p>
+            Stay informed with up-to-date resources, clinical insights, and practical 
+            tips tailored for optometrists practicing in Saudi Arabia. There are 
+            colleagues willing to teach you Arabic to help you adapt and excel in a 
+            new healthcare environment.
+          </p>
+          <a href="/articles" class="link-primary">Read more →</a>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="feature-card h-100">
+          <div class="feature-icon">
+            <div class="feature-icon">
+              <i class="fa-solid fa-people-group"></i>
+            </div>
+          </div>
+          <h4>Strong Network and Support</h4>
+          <p>
+            More than colleagues, we are family. Connect with fellow Nigerian 
+            optometrists who understand your journey. Share experiences, seek 
+            advice, and build lasting relationships that strengthen both your 
+            career and your personal well-being.
+          </p>
+          <a href="/add_new_user" class="link-primary">Join community →</a>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="feature-card h-100">
+          <div class="feature-icon">
+              <div class="feature-icon">
+                <i class="fa-solid fa-plane"></i>
+              </div>
+          </div>
+          <h4>Cultural & Personal Enrichment</h4>
+          <p>
+            Life in Saudi can feel new and different, but you don’t have to 
+            figure it all out alone. You’ll learn directly from Nigerian 
+            optometrists who’ve been here longer — from handy Arabic phrases 
+            to little everyday tips that make settling in smoother (and a lot 
+            more fun!)
+          </p>
+          <a href="/add_new_user" class="link-primary">Join community →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MEET CUTE PREMIUM BAND -->
+<section class="py-5">
+  <div class="container">
+    <div class="meetcute-box">
+      <div class="row align-items-center g-4">
+        <div class="col-md-6">
+          <h2 class="fw-bold">Meet Cute Zone</h2>
+          <p class="text-muted mb-4">
+            Tired of endless searching and awkward introductions? Step into our 
+            Meet Cute Zone — a space designed for genuine connections, shared 
+            interests, and meaningful companionship. Whether you're looking for 
+            friendship, romance, or something beautifully unexpected, our 
+            relationship page helps you discover people who truly match your vibe.
+          </p>
+          <a href="/relationships" class="btn btn-danger btn-lg">
+            Find Love & Companionship
+          </a>
+        </div>
+
+        <div class="col-md-6">
+          <div id="meetCuteCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+              <button type="button" data-bs-target="#meetCuteCarousel" data-bs-slide-to="0" class="active"></button>
+              <button type="button" data-bs-target="#meetCuteCarousel" data-bs-slide-to="1"></button>
+              <button type="button" data-bs-target="#meetCuteCarousel" data-bs-slide-to="2"></button>
+            </div>
+
+            <div class="carousel-inner rounded shadow">
+              <div class="carousel-item active">
+                <img src="/images/Terrell.jpg" class="d-block w-100" alt="Couple smiling">
+              </div>
+              <div class="carousel-item">
+                <img src="/images/cara_mason.jpg" class="d-block w-100" alt="Two people talking">
+              </div>
+              <div class="carousel-item">
+                <img src="/images/family.jpg" class="d-block w-100" alt="Friends laughing">
+              </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#meetCuteCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon"></span>
+            </button>
+
+            <button class="carousel-control-next" type="button" data-bs-target="#meetCuteCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES CAROUSEL -->
+<section class="py-5 hbg-soft">
+  <div class="container">
+    <div class="carousel-frame">
+      <div id="myCarousel" class="carousel slide" data-bs-ride="carousel">
 
         <div class="carousel-indicators">
-          <button type="button" data-bs-target="#meetCuteCarousel" data-bs-slide-to="0" class="active"></button>
-          <button type="button" data-bs-target="#meetCuteCarousel" data-bs-slide-to="1"></button>
-          <button type="button" data-bs-target="#meetCuteCarousel" data-bs-slide-to="2"></button>
+          <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="0" class="active"></button>
+          <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="1"></button>
+          <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="2"></button>
         </div>
 
-        <div class="carousel-inner rounded shadow">
+        <div class="carousel-inner">
+          <div class="carousel-item">
+            <div class="container">
+              <img src="./images/black_camera.jpg" class="d-block w-100" alt="Fancy Frame">
+              <div class="carousel-caption text-start text-white fw-bold">
+                <h1>Mini Market and Optical store.</h1>
+                <p class="opacity-75 text-white fw-semibold">
+                  Moving to a new city within the Kingdom? Our marketplace connects 
+                  you with fellow optometrists looking to buy or sell equipment and 
+                  household items, making your transition smoother and more affordable.
+                </p>
+                <p>
+                  <a class="btn btn-lg btn-primary" href="/market">Search Items</a>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="carousel-item">
+            <div class="container">
+              <img src="./images/job_logo.jpg" class="d-block w-100" alt="Job Banner">
+              <div class="carousel-caption">
+                <h1 class="text-black">Find New Job Postings.</h1>
+                <p class="text-black">
+                  Is your contract up and you need a new job? Our job board features 
+                  the latest opportunities specifically for Nigerian optometrists in 
+                  Saudi Arabia, helping you find your next role with ease.
+                </p>
+                <p>
+                  <a class="btn btn-lg btn-primary" href="/showjobs">Learn more</a>
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div class="carousel-item active">
-            <img src="/images/Terrell.jpg" class="d-block w-100" alt="Couple smiling">
-          </div>
-          <div class="carousel-item">
-            <img src="/images/cara_mason.jpg" class="d-block w-100" alt="Two people talking">
-          </div>
-          <div class="carousel-item">
-            <img src="/images/family.jpg" class="d-block w-100" alt="Friends laughing">
+            <div class="container">
+              <img src="./images/edit-bg.jpg" class="d-block w-100" alt="edit background">
+              <div class="carousel-caption text-end text-black">
+                <h1>Articles, News and Updates</h1>
+                <p>
+                  Stay informed with the latest articles, news, and updates tailored 
+                  for Nigerian optometrists in Saudi Arabia.
+                </p>
+                <p>
+                  <a class="btn btn-lg btn-primary" href="/articles">Read More</a>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <button class="carousel-control-prev" type="button" data-bs-target="#meetCuteCarousel" data-bs-slide="prev">
+        <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
           <span class="carousel-control-prev-icon"></span>
+          <span class="visually-hidden">Previous</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#meetCuteCarousel" data-bs-slide="next">
+
+        <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
           <span class="carousel-control-next-icon"></span>
+          <span class="visually-hidden">Next</span>
         </button>
 
       </div>
     </div>
-
   </div>
-</div>
-
-  <div class="container-fluid" style="max-width: 1200px; margin-top: 50px; margin-bottom: 50px;">
-    <div id="myCarousel" class="carousel slide mb-6" data-bs-ride="carousel"> 
-    
-      <div class="carousel-indicators"> 
-        <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="0" 
-                class="active" aria-label="Slide 1" aria-current="true"></button> 
-        <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="1" 
-                aria-label="Slide 2" class=""></button> 
-        <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="2" 
-                aria-label="Slide 3" class=""></button> 
-      </div> 
-      
-      <div class="carousel-inner"> 
-        
-        <div class="carousel-item carousel-item-next carousel-item-start"> 
-          <div class="container"> 
-            <img src="./images/fancy-frame.jpg" class="d-block w-100 " alt="Fancy Frame" aria-hidden="true">
-            <div class="carousel-caption text-start text-black"> 
-              <h1>Mini Market and Optical store.</h1> 
-              <p class="opacity-75 text-black">
-                Moving to a new city within the Kingdom? Our marketplace connects you with fellow optometrists looking to buy or sell equipment and household items, making your transition smoother and more affordable.
-              </p> 
-              <p><a class="btn btn-lg btn-primary" href="/market">Search Items</a></p> 
-            </div> 
-          </div> 
-        </div> 
-        
-        <div class="carousel-item"> 
-          <div class="container"> 
-            <img src="./images/job_logo.jpg" class="d-block w-100 " alt="Job Banner"></img>
-            <div class="carousel-caption"> 
-              <h1 class="text-black">Find New Job Postings.</h1> 
-              <p class="text-black">
-                Is your contract up and you need a new job? Our job board features the latest opportunities specifically for Nigerian optometrists in Saudi Arabia, helping you find your next role with ease.
-              </p> 
-              <p><a class="btn btn-lg btn-primary" href="/showjobs">Learn more</a></p> 
-            </div> 
-          </div> 
-        </div> 
-        
-        <div class="carousel-item active carousel-item-start"> 
-          <div class="container"> 
-            <img src="./images/edit-bg.jpg" class="d-block w-100 " alt="edit background"></img>
-            <div class="carousel-caption text-end text-black"> 
-              <h1>Articles, News and Updates</h1> 
-              <p>
-                Stay informed with the latest articles, news, and updates tailored for Nigerian optometrists in Saudi Arabia.
-              </p> 
-              <p><a class="btn btn-lg btn-primary" href="/articles">Read More</a></p> 
-            </div> 
-          </div> 
-        </div> 
-        
-      </div> 
-      
-      <button class="carousel-control-prev" type="button" 
-              data-bs-target="#myCarousel" data-bs-slide="prev"> 
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span> 
-        <span class="visually-hidden">Previous</span> 
-      </button> 
-      
-      <button class="carousel-control-next" type="button" 
-              data-bs-target="#myCarousel" data-bs-slide="next"> 
-        <span class="carousel-control-next-icon" aria-hidden="true"></span> 
-        <span class="visually-hidden">Next</span> 
-      </button> 
-      
-    </div>
-  </div>
+</section>
 
 <%- include("partials/footer.ejs") %>

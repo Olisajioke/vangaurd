@@ -7,6 +7,8 @@ import methodOverride from "method-override"
 import bcrypt from "bcrypt";
 import db from "./db.js"
 import nodemailer from "nodemailer";
+import dotenv from "dotenv"
+dotenv.config()
 
 import path from "path"
 
@@ -60,11 +62,19 @@ function requireLogin(req, res, next) {
   next()
 }
 
-app.use(session({
+
+
+const sessionConfig = {
   secret: "keyboard cat",
   resave: false,
-  saveUninitialized: false
-}));
+  saveUninitialized: false,
+  rolling: true, // reset timer on every request
+  cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 20 // 20 minutes
+  }
+}
+
 
 app.use(async (req, res, next) => {
   try {
@@ -127,14 +137,18 @@ app.use(session({
 }));
 
 // Flash middleware
-app.use(flash());
+app.use(session(sessionConfig))
+app.use(flash())
 
 // Make flash messages available in templates
 app.use((req, res, next) => {
-  res.locals.success_msg = req.flash('success');
-  res.locals.error_msg = req.flash('error');
-  next();
-});
+  res.locals.success = req.flash("success") || []
+  res.locals.error = req.flash("error") || []
+  next()
+})
+
+
+
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -209,6 +223,7 @@ function normalizeMultiSelect(data) {
 }
 
 
+
 // HOME ROUTE
 app.get("/", (req, res) => {
   res.render("index")
@@ -226,8 +241,14 @@ app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
   try {
     const { fName, lName, email, password, location, vanguard } = req.body
 
-    // confirm vanguard code
-    if (vanguard !== process.env.VANGUARD_CODE) {
+    // get current vanguard code from DB
+    const [rows] = await db.query(
+      "SELECT vanguard_code FROM site_settings WHERE id = 1"
+    )
+
+    const currentVanguard = rows[0]?.vanguard_code
+    console.log(currentVanguard);
+    if (!currentVanguard || vanguard !== currentVanguard) {
       return res.render("add_new_user", { error: "Invalid Vanguard code" })
     }
 
@@ -235,7 +256,6 @@ app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
       return res.render("add_new_user", { error: "Passwords do not match" })
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const profilepic = req.file ? req.file.filename : null
@@ -257,7 +277,7 @@ app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
 
     req.session.userId = userId
     res.redirect("/profile")
-
+    
   } catch (err) {
     console.error(err)
     res.send("Registration error")
@@ -614,21 +634,25 @@ app.get("/view_posts/:id", requireLogin, async (req, res) => {
     WHERE p.id=? AND p.type='article'
   `, [id])
 
-  if (!post) return res.status(404).send("Post not found")
+  if (!post) return res.status(404).send("Post not found");
 
   const [comments] = await db.query(`
-    SELECT c.id, c.content, c.created_at, u.fname
-    FROM comments c
-    LEFT JOIN users u ON c.user_id = u.id
-    WHERE c.post_id=?
-    ORDER BY c.created_at ASC
-  `, [id])
+  SELECT c.id, c.content, c.created_at, c.user_id, u.fname
+  FROM comments c
+  LEFT JOIN users u ON c.user_id = u.id
+  WHERE c.post_id=?
+  ORDER BY c.created_at ASC
+`, [id])
+
 
   res.render("view_post", {
-    post,
-    comments,
-    editCommentId: req.query.edit
+  post,
+  comments,
+  editCommentId: req.query.edit,
+  currentUserId: req.session.userId,
+  isAdmin: req.session.role === "admin"
   })
+
 })
 
 
@@ -701,15 +725,29 @@ app.delete("/posts/:postId/comments/:commentId/delete", requireLogin, async (req
 // route to display jobs
 app.get("/showjobs", requireLogin, async (req, res) => {
   const [rows] = await db.query(`
-    SELECT p.id, p.title, p.location, p.contact,
-           j.clinic, j.salary, j.description
+    SELECT 
+      p.id,
+      p.title,
+      p.location,
+      p.contact,
+      j.clinic,
+      j.salary,
+      j.description,
+      j.user_id
     FROM posts p
     JOIN jobs j ON p.id = j.post_id
     ORDER BY p.created_at DESC
   `)
 
-  res.render("showjobs", { jobs: rows })
+  res.render("showjobs", {
+    jobs: rows,
+    currentUserId: req.session.userId,
+    isAdmin: req.session.role === "admin"
+  })
 })
+
+
+
 
 
 // GET A SINGLE JOB
@@ -736,10 +774,18 @@ app.get("/jobs/:id", requireLogin, async (req, res) => {
 
   if (!job) return res.status(404).send("Job not found");
 
-  const isOwner = job.user_id === req.session.userId;
+  const currentUserId = req.session.userId;
+  const isOwner = job.user_id === currentUserId;
+  const isAdmin = req.session.role === "admin";
 
-  res.render("singlejob", { job, isOwner });
+  res.render("singlejob", {
+    job,
+    isOwner,
+    isAdmin,
+    currentUserId
+  });
 });
+
 
 
 // route to create job
@@ -802,15 +848,28 @@ app.put("/editjob/:id", requireLogin, async (req, res) => {
 
 
 //delete jobs
-
 app.delete("/deletejob/:id", requireLogin, async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  await db.query("DELETE FROM jobs WHERE post_id=?", [id])
-  await db.query("DELETE FROM posts WHERE id=?", [id])
+  // load job owner
+  const [[job]] = await db.query(
+    "SELECT user_id FROM jobs WHERE post_id=?",
+    [id]
+  );
 
-  res.redirect("/showjobs")
-})
+  if (!job) return res.status(404).send("Job not found");
+
+  // 🔐 ownership / admin check
+  if (job.user_id !== req.session.userId && req.session.role !== "admin") {
+    return res.status(403).send("Not authorized");
+  }
+
+  // delete job + linked post
+  await db.query("DELETE FROM jobs WHERE post_id=?", [id]);
+  await db.query("DELETE FROM posts WHERE id=?", [id]);
+
+  res.redirect("/showjobs");
+});
 
 
 
@@ -818,8 +877,10 @@ app.delete("/deletejob/:id", requireLogin, async (req, res) => {
 
 // show all items for sale
 app.get("/market", requireLogin, async (req, res) => {
-  const [rows] = await db.query(`
-    SELECT p.id, p.title, p.content AS description,
+  const userId = req.session.userId
+
+  const [items] = await db.query(`
+    SELECT p.id, p.user_id, p.title, p.content AS description,
            p.location, p.contact,
            p.image1, p.image2, p.image3,
            m.price
@@ -828,36 +889,68 @@ app.get("/market", requireLogin, async (req, res) => {
     ORDER BY p.created_at DESC
   `)
 
-  res.render("market", { items: rows })
+  const [saved] = await db.query(
+    "SELECT post_id FROM saved_items WHERE user_id=?",
+    [userId]
+  )
+
+  const savedIds = saved.map(s => s.post_id)
+
+  res.render("market", { items, savedIds, userId })
 })
+
 
 
 // get a single item
 app.get("/item/:id", requireLogin, async (req, res) => {
   const { id } = req.params
+  const userId = req.session.userId
 
   const [[item]] = await db.query(`
-    SELECT p.*, m.price
+    SELECT 
+      p.id,
+      p.title,
+      p.content,
+      p.location,
+      p.contact,
+      p.image1,
+      p.image2,
+      p.image3,
+      u.fname,
+      u.lname,
+      m.price,
+      m.condition_note
     FROM posts p
     JOIN market_items m ON p.id = m.post_id
+    LEFT JOIN users u ON p.user_id = u.id
     WHERE p.id = ?
   `, [id])
 
   if (!item) return res.status(404).send("Item not found")
-  const isSaved = await db.query(
-    "SELECT * FROM saved_items WHERE user_id=? AND post_id=?",
-    [req.session.userId, id]
-  )
 
-  res.render("item", { item, isSaved: isSaved.length > 0 })
+  // build gallery
+  item.images = [item.image1, item.image2, item.image3].filter(Boolean)
+
+  // seller display
+  item.seller = [item.fname, item.lname].filter(Boolean).join(" ") || "Unknown"
+
+  // saved check
+  const [savedRows] = await db.query(
+    "SELECT 1 FROM saved_items WHERE user_id=? AND post_id=?",
+    [userId, id]
+  )
+  const isSaved = savedRows.length > 0
+
+  res.render("item", { item, isSaved })
 })
+
 
 
 
 // create item for sale
 app.post("/createitem", requireLogin, upload.array("images", 3), async (req, res) => {
   try {
-    const { title, price, description, location, contact } = req.body
+    const { title, price, description, location, contact, condition_note } = req.body
     const userId = req.session.userId
     const postId = Date.now().toString()
 
@@ -866,7 +959,6 @@ app.post("/createitem", requireLogin, upload.array("images", 3), async (req, res
     const image2 = files[1]?.filename || null
     const image3 = files[2]?.filename || null
 
-    // insert post
     await db.query(`
       INSERT INTO posts
       (id, user_id, type, title, content, location, contact, image1, image2, image3)
@@ -883,37 +975,36 @@ app.post("/createitem", requireLogin, upload.array("images", 3), async (req, res
       image3
     ])
 
-    // insert market details
     await db.query(`
-      INSERT INTO market_items (post_id, price)
-      VALUES (?, ?)
-    `, [postId, price])
+      INSERT INTO market_items (post_id, price, condition_note)
+      VALUES (?, ?, ?)
+    `, [postId, price, condition_note])
 
+    req.flash("success", "Item created successfully")
     res.redirect("/market")
 
   } catch (err) {
     console.error(err)
-    res.send("Error creating item")
+    req.flash("error", "Error creating item")
+    res.redirect("/market")
   }
 })
-
 
 
 // EDIT ITEM AND UPDATE
 app.put("/edititem/:id", requireLogin, upload.array("images", 3), async (req, res) => {
   const { id } = req.params
-  const { title, price, description, location, contact } = req.body
+  const { title, price, description, location, contact, condition_note } = req.body
 
   const files = req.files || []
-
   let image1 = null, image2 = null, image3 = null
+
   if (files.length > 0) {
     image1 = files[0]?.filename || null
     image2 = files[1]?.filename || null
     image3 = files[2]?.filename || null
   }
 
-  // update post
   if (files.length > 0) {
     await db.query(`
       UPDATE posts
@@ -929,13 +1020,13 @@ app.put("/edititem/:id", requireLogin, upload.array("images", 3), async (req, re
     `, [title, description, location, contact, id])
   }
 
-  // update price
   await db.query(`
     UPDATE market_items
-    SET price=?
+    SET price=?, condition_note=?
     WHERE post_id=?
-  `, [price, id])
+  `, [price, condition_note, id])
 
+  req.flash("success", "Item updated successfully")
   res.redirect("/market")
 })
 
@@ -948,8 +1039,9 @@ app.delete("/deleteitem/:id", requireLogin, async (req, res) => {
 
   await db.query("DELETE FROM market_items WHERE post_id=?", [id])
   await db.query("DELETE FROM posts WHERE id=?", [id])
+  req.flash("success", "Item deleted successfully!")
 
-  res.redirect("/market")
+  res.redirect("/market");
 })
 
 
@@ -974,9 +1066,30 @@ app.post("/toggle-save/:id", requireLogin, async (req, res) => {
       [userId, id]
     )
   }
-
-  res.redirect("back")
+  
+  res.redirect("/market")   
 })
+
+
+// SAVED ITEMS PAGE
+app.get("/saved", requireLogin, async (req, res) => {
+  const userId = req.session.userId
+
+  const [items] = await db.query(`
+    SELECT p.id, p.title, p.content AS description,
+           p.location, p.contact,
+           p.image1, p.image2, p.image3,
+           m.price
+    FROM saved_items s
+    JOIN posts p ON s.post_id = p.id
+    JOIN market_items m ON p.id = m.post_id
+    WHERE s.user_id = ?
+    ORDER BY s.created_at DESC
+  `, [userId])
+  req.flash("success", "Item saved successfully")
+  res.render("saved", { items })
+})
+
 
 
 // RELATIONSHIPS:
@@ -1015,6 +1128,10 @@ app.get("/relationships/:id", requireLogin, async (req, res) => {
   res.render("relationshipView", { rel, isOwner })
 })
 
+
+app.get("/create-relationship", requireLogin, (req, res) => {
+  res.render("relationshipForm");
+})
 
 
 // create relationship
@@ -1078,12 +1195,12 @@ app.post(
           image3
         ]
       )
-
-      res.redirect("/relationships")
+      req.flash("success", "Profile crerated successfully");
+      res.redirect("/relationships");
 
     } catch (err) {
-      console.error("Relationship insert error:", err)
-      res.send("Error creating relationship profile")
+      req.flash("error", "Relationship insert error:");
+      res.send("Error creating relationship profile");
     }
   }
 )
@@ -1208,15 +1325,32 @@ app.post("/reviews/create", requireLogin, async (req, res) => {
 
 //  show all reviews
 app.get("/reviews", requireLogin, async (req, res) => {
-  const [rows] = await db.query(`
+  const { clinic } = req.query;
+
+  let sql = `
     SELECT p.id AS post_id, r.*
     FROM posts p
     JOIN clinic_reviews r ON p.id = r.post_id
-    ORDER BY p.created_at DESC
-  `)
+  `;
 
-  res.render("showallreviews", { reviews: rows })
-})
+  let params = [];
+
+  if (clinic && clinic.trim() !== "") {
+    sql += " WHERE r.clinic_name LIKE ?";
+    params.push(`%${clinic}%`);
+  }
+
+  sql += " ORDER BY p.created_at DESC";
+
+  const [rows] = await db.query(sql, params);
+
+  res.render("showallreviews", {
+    reviews: rows,
+    query: clinic || ""
+  });
+});
+
+
 
 
 // single clinic review route
@@ -1387,6 +1521,59 @@ app.get("/admin/users", requireAdmin, requireLogin, async (req, res) => {
   res.render("admin/users", { users })
 })
 
+// ADD VANGUARD CODE:
+app.get("/admin/vanguard", requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT vanguard_code FROM site_settings WHERE id = 1"
+    )
+
+    const currentCode = rows[0]?.vanguard_code
+
+    res.render("admin/admin_vanguard", { currentCode })
+
+  } catch (err) {
+    console.error(err)
+    res.send("Error loading Vanguard settings")
+  }
+})
+
+
+// UPDATE VANGUARD CODE
+app.post("/admin/vanguard/update", requireAdmin, async (req, res) => {
+  try {
+    const { vanguard_code } = req.body
+
+    // update DB first
+    await db.query(
+      "UPDATE site_settings SET vanguard_code=? WHERE id=1",
+      [vanguard_code]
+    )
+
+    // send notification email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.ADMIN_EMAIL,
+        pass: process.env.ADMIN_EMAIL_PASS
+      }
+    })
+
+    await transporter.sendMail({
+      from: `"Vanguard Security" <${process.env.ADMIN_EMAIL}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: "Vanguard Code Rotated",
+      text: `The Vanguard access code has been updated.\n\nNew Code: ${vanguard_code}\n\nTime: ${new Date().toISOString()}`
+    })
+
+    res.redirect("/admin/vanguard")
+
+  } catch (err) {
+    console.error(err)
+    res.send("Failed to update Vanguard code")
+  }
+})
+
 
 
 // PATIENTS' DATA
@@ -1515,24 +1702,26 @@ app.post("/contact", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "yourgmail@gmail.com",
-        pass: "your_app_password"
+        user: "optometristvanguard@gmail.com",
+        pass: "tndmevymzenqdpjy"
       }
     });
 
     await transporter.sendMail({
-      from: Email,
-      to: "chijioke914@gmail.com",
+      from: '"Vanguard Contact" <optometristvanguard@gmail.com>',
+      replyTo: Email,
+      to: "optometristvanguard@gmail.com",
       subject: "New Contact Message",
-      text: Message
+      text: `From: ${Email}\n\n${Message}`
     });
 
-    res.send("Message sent successfully");
+    res.send("Message sent successfully, go back to the homepage.");
   } catch (err) {
     console.error(err);
-    res.send("Error sending message");
+    res.send("Error sending message, go back and try again.");
   }
 });
+
 
 
 app.listen(port, () => {

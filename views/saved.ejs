@@ -1,32 +1,81 @@
 <%- include("partials/header") %>
 
-<div class="container mt-4">
-  <h2 class="mb-3">Saved Items</h2>
+<main class="saved-page container py-5">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">
+      ❤️ Saved Items
+    </h2>
+    <span class="text-muted small">
+      <%= items.length %> saved
+    </span>
+  </div>
 
   <% if (!items || items.length === 0) { %>
-    <p>No saved items yet</p>
+    <div class="text-center py-5">
+      <div class="display-6 mb-3">💔</div>
+      <h5 class="fw-semibold">Nothing saved yet</h5>
+      <p class="text-muted mb-3">
+        Tap the heart on any market item to keep it here.
+      </p>
+      <a href="/market" class="btn btn-outline-primary">
+        Browse Market
+      </a>
+    </div>
   <% } %>
 
-  <div class="row">
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
     <% items.forEach(item => { %>
-      <div class="col-md-6 mb-3">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5><%= item.title %></h5>
-            <p>ر.س <%= item.price %></p>
+      <div class="col">
+        <div class="card saved-card border-0 shadow-sm h-100">
 
-            <a href="/item/<%= item.id %>" class="btn btn-outline-primary btn-sm">
-              View
-            </a>
+          <% const firstImage = item.image1 || item.image2 || item.image3; %>
 
-            <form action="/unsaveitem/<%= item.id %>" method="POST" class="d-inline">
-              <button class="btn btn-danger btn-sm">Remove</button>
-            </form>
+          <!-- IMAGE -->
+          <div class="saved-image-wrap">
+            <% if (firstImage) { %>
+              <img src="/uploads/<%= firstImage %>" class="card-img-top saved-image">
+            <% } else { %>
+              <div class="saved-placeholder d-flex align-items-center justify-content-center">
+                <span class="text-muted small">No Image</span>
+              </div>
+            <% } %>
+
+            <!-- PRICE BADGE -->
+            <div class="saved-price-badge">
+              ر.س <%= item.price %>
+            </div>
           </div>
+
+          <!-- BODY -->
+          <div class="card-body d-flex flex-column">
+            <h6 class="fw-semibold mb-1 text-truncate">
+              <%= item.title %>
+            </h6>
+
+            <p class="text-muted small mb-3 text-truncate">
+              <%= item.description %>
+            </p>
+
+            <div class="mt-auto d-flex justify-content-between align-items-center">
+              <a href="/item/<%= item.id %>" class="btn btn-sm btn-outline-secondary">
+                View
+              </a>
+
+              <form action="/toggle-save/<%= item.id %>" method="POST">
+                <button class="btn btn-link saved-remove p-0 border-0">
+                  💔 Remove
+                </button>
+              </form>
+            </div>
+          </div>
+
         </div>
       </div>
     <% }) %>
   </div>
-</div>
+
+</main>
 
 <%- include("partials/footer") %>

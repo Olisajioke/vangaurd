@@ -1,4 +1,3 @@
-
 <div class="modal fade" id="createJobModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -12,7 +11,23 @@
           <input name="title" class="form-control mb-2" placeholder="Job Title" required>
           <input name="clinic" class="form-control mb-2" placeholder="Clinic">
           <input name="location" class="form-control mb-2" placeholder="Location">
-          <input name="salary" class="form-control mb-2" placeholder="Salary">
+
+          <!-- Salary range select -->
+          <select name="salary" class="form-select mb-2">
+            <option value="">Select Salary (SAR)</option>
+            <option>5000</option>
+            <option>5500</option>
+            <option>6000</option>
+            <option>6500</option>
+            <option>7000</option>
+            <option>7500</option>
+            <option>8000</option>
+            <option>8500</option>
+            <option>9000</option>
+            <option>9500</option>
+            <option>10000</option>
+          </select>
+
           <input name="contact" class="form-control mb-2" placeholder="Contact">
           <textarea name="description" class="form-control" placeholder="Description"></textarea>
         </div>

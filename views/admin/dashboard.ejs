@@ -1,36 +1,43 @@
 <%- include("../partials/header") %>
 
-<div class="container py-4">
-  <h2 class="mb-4">Admin Dashboard</h2>
+<div class="container py-4 admin-dashboard">
+  <h2 class="admin-dashboard__title mb-4">Admin Dashboard</h2>
 
   <div class="row g-4">
 
     <div class="col-md-3">
-      <div class="card shadow-sm p-3 text-center">
-        <h4><%= counts.users %></h4>
-        <div>Users</div>
+      <div class="admin-dashboard__card">
+        <div class="admin-dashboard__count"><%= counts.users %></div>
+        <div class="admin-dashboard__label">Users</div>
       </div>
     </div>
 
     <div class="col-md-3">
-      <div class="card shadow-sm p-3 text-center">
-        <h4><%= counts.posts %></h4>
-        <div>Articles</div>
+      <div class="admin-dashboard__card">
+        <div class="admin-dashboard__count"><%= counts.posts %></div>
+        <div class="admin-dashboard__label">Articles</div>
       </div>
     </div>
 
     <div class="col-md-3">
-      <div class="card shadow-sm p-3 text-center">
-        <h4><%= counts.jobs %></h4>
-        <div>Jobs</div>
+      <div class="admin-dashboard__card">
+        <div class="admin-dashboard__count"><%= counts.jobs %></div>
+        <div class="admin-dashboard__label">Jobs</div>
       </div>
     </div>
 
     <div class="col-md-3">
-      <div class="card shadow-sm p-3 text-center">
-        <h4><%= counts.market %></h4>
-        <div>Market Items</div>
+      <div class="admin-dashboard__card">
+        <div class="admin-dashboard__count"><%= counts.market %></div>
+        <div class="admin-dashboard__label">Market Items</div>
       </div>
+    </div>
+
+    <div class="col-12 text-end">
+      <a href="/admin/vanguard" class="btn btn-dark admin-dashboard__vanguard-btn">
+        <i class="bi bi-shield-lock me-1"></i>
+        Vanguard Code
+      </a>
     </div>
 
   </div>

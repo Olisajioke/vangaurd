@@ -3,35 +3,52 @@
     <div class="modal-content job-edit-modal">
 
       <form action="/editjob/<%= job.id %>?_method=PUT" method="POST">
-        
+
         <div class="modal-header job-edit-header">
           <h5 class="modal-title mb-0">
             Edit Job
           </h5>
-          <button type="button" class="btn-close btn-close-white"
+          <button type="button"
+                  class="btn-close btn-close-white"
                   data-bs-dismiss="modal"></button>
         </div>
 
         <div class="modal-body">
 
           <label class="form-label">Title</label>
-          <input name="title" class="form-control mb-2"
+          <input name="title"
+                 class="form-control mb-2"
                  value="<%= job.title %>">
 
           <label class="form-label">Clinic</label>
-          <input name="clinic" class="form-control mb-2"
+          <input name="clinic"
+                 class="form-control mb-2"
                  value="<%= job.clinic %>">
 
           <label class="form-label">Location</label>
-          <input name="location" class="form-control mb-2"
+          <input name="location"
+                 class="form-control mb-2"
                  value="<%= job.location %>">
 
           <label class="form-label">Salary</label>
-          <input name="salary" class="form-control mb-2"
-                 value="<%= job.salary %>">
+          <select name="salary" class="form-select mb-2">
+            <option value="">Select Salary (SAR)</option>
+            <option value="5000"  <%= job.salary == 5000  ? "selected" : "" %>>5000</option>
+            <option value="5500"  <%= job.salary == 5500  ? "selected" : "" %>>5500</option>
+            <option value="6000"  <%= job.salary == 6000  ? "selected" : "" %>>6000</option>
+            <option value="6500"  <%= job.salary == 6500  ? "selected" : "" %>>6500</option>
+            <option value="7000"  <%= job.salary == 7000  ? "selected" : "" %>>7000</option>
+            <option value="7500"  <%= job.salary == 7500  ? "selected" : "" %>>7500</option>
+            <option value="8000"  <%= job.salary == 8000  ? "selected" : "" %>>8000</option>
+            <option value="8500"  <%= job.salary == 8500  ? "selected" : "" %>>8500</option>
+            <option value="9000"  <%= job.salary == 9000  ? "selected" : "" %>>9000</option>
+            <option value="9500"  <%= job.salary == 9500  ? "selected" : "" %>>9500</option>
+            <option value="10000" <%= job.salary == 10000 ? "selected" : "" %>>10000</option>
+          </select>
 
           <label class="form-label">Contact</label>
-          <input name="contact" class="form-control mb-2"
+          <input name="contact"
+                 class="form-control mb-2"
                  value="<%= job.contact %>">
 
           <label class="form-label">Description</label>

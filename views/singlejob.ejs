@@ -3,8 +3,8 @@
 <!-- HERO -->
 <section class="job-hero text-white d-flex align-items-center">
   <div class="container text-center">
-    <h1 class="display-5 fw-bold mb-2"><%= job.title %></h1>
-    <p class="lead mb-1"><%= job.clinic %> • <%= job.location %></p>
+    <h1 class="display-5 fw-bold mb-2 text-white"><%= job.title %> NEEDED</h1>
+    <p class="lead mb-1 text-white-75"><%= job.clinic %> • <%= job.location %></p>
     <p class="small text-white-75">
       Posted by <strong><%= job.fname %> <%= job.lname %></strong>
     </p>
@@ -21,7 +21,7 @@
 
         <!-- SALARY STRIP -->
         <div class="job-salary text-center">
-          ر.س <%= job.salary %>
+        SALARY:  ر.س <%= job.salary %> 
         </div>
 
         <div class="card-body">
@@ -57,7 +57,7 @@
                     target="_blank"
                     class="btn btn-success me-2">
                     <i class="fab fa-whatsapp me-1"></i>
-                    WhatsApp Clinic
+                    WhatsApp
                 </a>
             <% } else { %>
                 <span class="btn btn-secondary me-2 disabled">
@@ -65,25 +65,23 @@
                     No Contact
                 </span>
             <% } %>
-          <button class="btn btn-outline-success me-2"
-            data-bs-toggle="modal"
-            data-bs-target="#editJobModal-<%= job.id %>">
-            Edit
-          </button>
+            <% if (isOwner || isAdmin) { %>
+                <button class="btn btn-outline-success me-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editJobModal-<%= job.id %>">
+                    Edit
+                </button>
 
-          <button class="btn btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteJobModal-<%= job.id %>">
-            Delete
-          </button>
-
+                <button class="btn btn-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteJobModal-<%= job.id %>">
+                    Delete
+                </button>
+                <% } %>
         </div>
-
       </div>
-
     </div>
   </div>
-
 </div>
 
 <%- include("partials/editJobModal", { job }) %>

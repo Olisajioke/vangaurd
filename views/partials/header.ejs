@@ -150,7 +150,7 @@
        role="button"
        data-bs-toggle="dropdown">
       <i class="fa-solid fa-user-circle text-primary"></i>
-      <span class="fw-semibold"><%= userName %></span>
+      <span class="fw-semibold"> Dr. <%= userName %></span>
     </a>
 
     <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2">
@@ -178,7 +178,7 @@
     </ul>
   </li>
 
-  <!-- ADMIN PANEL (aligned now) -->
+  <!-- ADMIN PANEL -->
     <% if (userRole === 'admin') { %>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2"
@@ -205,5 +205,23 @@
     </ul>
   </div>
 </nav>
+<% if (success && success.length > 0) { %>
+  <div class="container mt-3">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <%= success[0] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+<% } %>
+
+<% if (error && error.length > 0) { %>
+  <div class="container mt-3">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <%= error[0] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+<% } %>
+
 <main>
 

@@ -9,7 +9,7 @@
 
         <div class="modal-body">
           <input name="title" class="form-control mb-2" value="<%= item.title %>">
-          <input name="seller" class="form-control mb-2" value="<%= item.seller %>">
+          <input type="text" name="condition_note" class="form-control" value="<%= item.condition_note || '' %>" placeholder="Condition">
           <input name="location" class="form-control mb-2" value="<%= item.location %>">
           <input name="price" class="form-control mb-2" value="<%= item.price %>">
           <input name="contact" class="form-control mb-2" value="<%= item.contact %>">
