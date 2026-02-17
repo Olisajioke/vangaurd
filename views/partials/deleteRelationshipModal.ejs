@@ -1,0 +1,35 @@
+
+<!-- DELETE RELATIONSHIP MODAL -->
+<div class="modal fade" id="deleteRelModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+
+      <div class="modal-body text-center p-4">
+
+        <h5 class="mb-3">Delete Profile?</h5>
+        <p class="text-muted mb-4">
+          This cannot be undone.
+        </p>
+
+        <form action="/relationships/delete/<%= rel.post_id %>?_method=POST"
+              method="POST">
+
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button"
+                    class="btn btn-light"
+                    data-bs-dismiss="modal">
+              Cancel
+            </button>
+
+            <button class="btn rel-btn-delete">
+              Delete
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>

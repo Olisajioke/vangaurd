@@ -1,143 +1,315 @@
 <%- include('partials/header') %>
+<div class="jumbotron">
 
-<!-- HERO / JUMBOTRON -->
-
-<div class="jumbotron text-center text-white position-relative overflow-hidden" style="padding:5rem 2rem;">
-
-  <!-- Background image -->
-  <div
-    class="position-absolute w-100 h-100"
-    style="
-      top:0;
-      left:0;
-      background-image: url('<%= post.image1 ? "/uploads/" + post.image1 : "/images/default_bg.jpg" %>');
-      background-size: cover;
-      background-position: center;
-      filter: blur(6px);
-      transform: scale(1.1);
-      z-index: 1;
-    "
-  ></div>
-
-  <!-- Dark overlay -->
-  <div
-  class="position-absolute w-100 h-100 view-post-overlay"
-  style="top:0; left:0; background: rgba(0,0,0,0.45); z-index:2;">
-</div>
-
-
-  <!-- Content -->
-  <div class="position-relative" style="z-index:3;">
-    <h1 class="display-4"><%= post.title %></h1>
-      <p class="lead fw-semibold text-white-75"><%= post.subtitle %></p>
-      <p class="mb-1 text-white">
-        By <strong><%= post.fname %> <%= post.lname %></strong>
-      </p>
-      <p class="small text-white-50">
-        <%= new Date(post.created_at).toLocaleDateString() %>
-      </p>
+  <!-- BLURRED IMAGE -->
+  <div class="hero-bg"
+       style="background-image:url('<%= post.image1 ? "/uploads/" + post.image1 : "/images/default_bg.jpg" %>');">
   </div>
-    
 
+  <!-- DARK OVERLAY -->
+  <div class="view-post-overlay"></div>
+
+  <!-- HERO CONTENT -->
+  <div class="hero-content">
+
+    <h1 class="hero-title"><%= post.title %></h1>
+
+    <% if (post.subtitle) { %>
+      <p class="hero-subtitle"><%= post.subtitle %></p>
+    <% } %>
+
+    <div class="hero-meta">
+      <span>By <strong><%= post.fname %> <%= post.lname %></strong></span>
+      <span class="hero-dot">•</span>
+      <span><%= new Date(post.created_at).toLocaleDateString() %></span>
+    </div>
+
+    <% if (post.rating) { %>
+      <div class="hero-rating">
+        ⭐ <%= post.rating %>/5
+      </div>
+    <% } %>
+  </div>
 </div>
 
-<!-- POST CONTENT -->
-<div class="container mt-4">
-
-  <!-- POST CARD -->
-  <div class="card mb-4">
+ <!-- POST CONTENT -->
+<div class="container post-content-wrap">
+  <div class="post-content-card">
     <div class="card-body">
       <%- post.content %>
     </div>
 
     <% if (currentUserId === post.user_id || isAdmin) { %>
       <div class="card-footer">
-          <a href="/new_clinic_stories?id=<%= post.id %>&mode=edit"
-            class="btn btn-primary btn-light">
-            <i class="fas fa-edit"></i>
-            Edit Post
-          </a>
+        <a href="/new_clinic_stories?id=<%= post.id %>&mode=edit"
+           class="btn btn-primary btn-light">
+          <i class="fas fa-edit"></i>
+          Edit Post
+        </a>
 
-          <button
-            class="btn btn-danger ms-2"
-            data-bs-toggle="modal"
-            data-bs-target="#deletePostModal-<%= post.id %>">
-            <i class="fas fa-trash-alt"></i> Delete
-          </button>
+        <button
+          class="btn btn-danger ms-2"
+          data-bs-toggle="modal"
+          data-bs-target="#deletePostModal-<%= post.id %>">
+          <i class="fas fa-trash-alt"></i> Delete
+        </button>
       </div>
     <% } %>
-
-
-    </div>
-  </div>
-
-  <!-- COMMENTS SECTION -->
-<div class="card mt-4">
-  <div class="card-header text-center">
-    <h4 class="mb-0">Comments</h4>
-  </div>
-
-  <div class="card-body">
-
-    <% if (comments && comments.length > 0) { %>
-      <% comments.forEach(c => { %>
-
-        <div class="comment mb-3 p-3 border rounded">
-          <strong>Dr. <%= c.fname %></strong>
-
-          <small class="text-muted d-block mb-1">
-            <%= new Date(c.created_at).toLocaleDateString() %>
-          </small>
-
-          <p class="mb-2"><%= c.content %></p>
-          <% if (currentUserId === c.user_id || isAdmin) { %>
-            <div class="d-flex gap-2">
-              <button
-                class="btn btn-sm btn-outline-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#editCommentModal-<%= c.id %>">
-                Edit
-              </button>
-
-              <button
-                class="btn btn-sm btn-danger"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteCommentModal-<%= c.id %>">
-                Delete
-              </button>
-            </div>
-          <% } %>
-      <% }) %>
-    <% } else { %>
-      <p class="text-center text-muted">
-        No comments yet. Be the first to comment!
-      </p>
-    <% } %>
-
-    <hr>
-
-    <!-- ADD COMMENT -->
-    <h5 class="text-center mb-3">Add a comment</h5>
-
-    <form action="/posts/<%= post.id %>/comments" method="POST">
-      <textarea
-        name="comment"
-        class="form-control mb-3"
-        rows="3"
-        placeholder="Write your comment..."
-        required
-      ></textarea>
-
-      <button class="btn btn-primary w-100">
-        Submit Comment
-      </button>
-    </form>
-
   </div>
 </div>
+
+ <!-- COMMENTS SECTION -->
+<div class="container comments-wrap">
+
+  <div class="comments-card">
+
+    <div class="comments-header">
+      <h4>Comments</h4>
+    </div>
+
+    <div class="comments-body">
+
+      <% if (comments && comments.length > 0) { %>
+        <% comments.forEach(c => { %>
+
+          <div class="comment-item">
+            <div class="comment-meta">
+              <strong>Dr. <%= c.fname %></strong>
+              <span><%= new Date(c.created_at).toLocaleDateString() %></span>
+            </div>
+
+            <p class="comment-text"><%= c.content %></p>
+
+            <% if (currentUserId === c.user_id || isAdmin) { %>
+              <div class="comment-actions">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editCommentModal-<%= c.id %>">
+                  Edit
+                </button>
+
+                <button
+                  class="btn btn-sm btn-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteCommentModal-<%= c.id %>">
+                  Delete
+                </button>
+              </div>
+            <% } %>
+          </div>
+
+        <% }) %>
+      <% } else { %>
+        <p class="text-center text-muted">
+          No comments yet. Be the first to comment!
+        </p>
+      <% } %>
+
+      <hr class="comments-divider">
+
+      <h5 class="text-center mb-3">Add a comment</h5>
+
+      <form action="/posts/<%= post.id %>/comments" method="POST">
+        <textarea
+          name="comment"
+          class="form-control mb-3"
+          rows="3"
+          placeholder="Write your comment..."
+          required></textarea>
+
+        <button class="btn btn-primary w-100">
+          Submit Comment
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+<style>
+  
+  .view-post-overlay {
+    top: 0;
+    left: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 2;
+  }
+
+  .post-content-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 26px 28px;
+    box-shadow: 0 12px 32px rgba(30, 60, 45, 0.08);
+    border: 1px solid #e6ece9;
+  }
+
+  /* content typography */
+  .post-content-card .card-body,
+  .post-content-card {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #2f3e36;
+  }
+
+  /* admin footer inside content card */
+  .post-content-card .card-footer {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid #eef2f0;
+    background: transparent;
+  }
+
+  .comments-wrap {
+    margin-top: 30px;
+    margin-bottom: 50px;
+    max-width: 900px;
+  }
+
+  .comments-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e6ece9;
+    box-shadow: 0 10px 26px rgba(30, 60, 45, 0.06);
+    padding: 22px 24px;
+  }
+
+  .comments-header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .comments-header h4 {
+    margin: 0;
+    font-weight: 600;
+    color: #2f3e36;
+  }
+
+  .comment-item {
+    padding: 14px 0;
+    border-bottom: 1px solid #eef2f0;
+  }
+
+  .comment-item:last-child {
+    border-bottom: none;
+  }
+
+  .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #6f7f77;
+    margin-bottom: 6px;
+  }
+
+  .comment-text {
+    margin: 0 0 8px 0;
+    color: #2f3e36;
+    line-height: 1.6;
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .comments-divider {
+    margin: 22px 0;
+  }
+
+  ./* NAVBAR ALWAYS ABOVE */
+.navbar {
+  position: relative;
+  z-index: 1000;
+}
+
+/* HERO CONTAINER */
+.jumbotron {
+  position: relative;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  color: #fff;
+}
+
+/* HERO IMAGE */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 40%;
+  filter: blur(6px);
+  transform: scale(1.12);
+  z-index: 1;
+}
+
+/* DARK OVERLAY */
+.view-post-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 2;
+}
+
+/* HERO CONTENT */
+.jumbotron > .position-relative {
+  z-index: 3;
+}
+
+/* SOFT FADE INTO PAGE */
+.jumbotron::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #f6faf8);
+  z-index: 4;
+}
+
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 900px;
+  padding: 40px 20px;
+}
+
+.hero-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.hero-meta {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.hero-dot {
+  margin: 0 8px;
+}
+
+.hero-rating {
+  margin-top: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+</style>
 
 <%- include('partials/deletePostModal', { post }) %>
 <%- include('partials/editarticlecommentModal', { comments, post }) %>
 <%- include('partials/deletearticlecommentModal', { comments, post }) %>
-
 <%- include('partials/footer') %>

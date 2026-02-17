@@ -1,0 +1,130 @@
+<%- include("../partials/header") %>
+
+<div class="admin">
+  <div class="container py-4">
+
+    <h3 class="admin__title mb-3">Posts</h3>
+
+    <div class="admin-table">
+
+      <div class="admin-table__head">
+        <div class="col-title">Title</div>
+        <div class="col-author">Author</div>
+        <div class="col-date">Date</div>
+        <div class="col-actions"></div>
+      </div>
+
+      <% (posts || []).forEach(p => { %>
+        <div class="admin-table__row">
+
+          <div class="col-title">
+            <span class="post-title"><%= p.title %></span>
+          </div>
+
+          <div class="col-author">
+            <%= p.fname %> <%= p.lname %>
+          </div>
+
+          <div class="col-date">
+            <%= new Date(p.created_at).toLocaleDateString() %>
+          </div>
+
+          <div class="col-actions">
+            <a href="/admin/posts/<%= p.id %>/edit" class="btn-toggle me-2">
+              Edit
+            </a>
+
+            <button class="btn-toggle"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deletePostModal-<%= p.id %>">
+                 Delete
+            </button>
+          </div>
+        </div>
+        <%- include("partials/deletePostModal", { post: p }) %>
+      <% }) %>
+
+    </div>
+
+  </div>
+</div>
+
+<style>
+.admin-table {
+  background: #fff;
+  border: 1px solid #e6ece9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* GRID LAYOUT */
+.admin-table__head,
+.admin-table__row {
+  display: grid;
+  grid-template-columns: 3fr 2fr 1.2fr 1.5fr;
+  align-items: center;
+  padding: 14px 18px;
+}
+
+/* HEADER */
+.admin-table__head {
+  background: #f3f6f4;
+  font-weight: 600;
+  color: #44554c;
+  font-size: 0.85rem;
+}
+
+/* ROW */
+.admin-table__row {
+  border-top: 1px solid #eef2f0;
+  transition: background 0.15s ease;
+}
+
+.admin-table__row:hover {
+  background: #fafcfb;
+}
+
+/* CELLS */
+.col-title {
+  font-weight: 500;
+  color: #2f3e36;
+}
+
+.col-author {
+  color: #55665e;
+  font-size: 0.9rem;
+}
+
+.col-date {
+  color: #7a8a83;
+  font-size: 0.85rem;
+}
+
+.col-actions {
+  text-align: right;
+}
+
+/* TITLE WRAP CONTROL */
+.post-title {
+  display: inline-block;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* BUTTON */
+.btn-toggle {
+  border: 1px solid #d6ded9;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: #2f3e36;
+}
+
+.btn-toggle:hover {
+  background: #f3f6f4;
+}
+</style>
+<%- include("../partials/footer") %>

@@ -1,0 +1,252 @@
+<%- include("../partials/header") %>
+
+<div class="admin">
+  <div class="container py-4">
+
+    <h3 class="admin__title mb-3">REGISTERED DOCTORS</h3>
+
+    <div class="admin-table">
+
+      <div class="admin-table__head">
+        <div>Name</div>
+        <div>Email</div>
+        <div>Role</div>
+        <div>Status</div>
+        <div></div>
+      </div>
+
+      <% (users || []).forEach(u => { %>
+        <div class="admin-table__row">
+
+          <!-- NAME -->
+          <div>
+            <%= u.fname %> <%= u.lname %>
+          </div>
+
+          <!-- EMAIL -->
+          <div>
+            <%= u.email %>
+          </div>
+
+          <!-- ROLE -->
+          <div>
+            <% if (u.role === 'admin') { %>
+              <span class="role role--admin">Admin</span>
+            <% } else { %>
+              <span class="role role--user">User</span>
+            <% } %>
+          </div>
+
+          <!-- STATUS -->
+          <div>
+            <% if (u.is_active) { %>
+              <span class="status status--active">Active</span>
+            <% } else { %>
+              <span class="status status--disabled">Disabled</span>
+            <% } %>
+          </div>
+
+          <!-- ACTION -->
+          <div class="text-end">
+
+            <% if (u.id === currentAdminId) { %>
+              <span class="admin-lock">You</span>
+
+            <% } else { %>
+
+              <!-- ROLE TOGGLE -->
+              <form method="POST"
+                    action="/admin/users/<%= u.id %>/role"
+                    style="display:inline;">
+                <input type="hidden" name="currentAdminId" value="<%= currentAdminId %>">
+                <button class="btn-role">
+                    <% if (u.role === 'admin') { %>
+                    Demote
+                    <% } else { %>
+                    Make Admin
+                    <% } %>
+                </button>
+            </form>
+
+
+              <!-- ACTIVE TOGGLE (only for non-admins) -->
+              <% if (u.role !== 'admin') { %>
+                <form method="POST"
+                      action="/admin/users/<%= u.id %>/toggle"
+                      style="display:inline;">
+                  <button class="btn-toggle">
+                    <% if (u.is_active) { %>Disable<% } else { %>Enable<% } %>
+                  </button>
+                </form>
+              <% } %>
+
+            <% } %>
+
+          </div>
+
+        </div>
+      <% }) %>
+
+    </div>
+
+  </div>
+</div>
+
+<style>
+.role {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.role--admin {
+  background: #ede7f6;
+  color: #5e35b1;
+}
+
+.role--user {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.admin-lock {
+  font-size: 0.75rem;
+  color: #7a8a83;
+  font-weight: 500;
+}
+
+.admin-table {
+  background: #fff;
+  border: 1px solid #e6ece9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-table__head,
+.admin-table__row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 180px;
+  padding: 14px 16px;
+  align-items: center;
+}
+
+.admin-table__head {
+  background: #f3f6f4;
+  font-weight: 600;
+  color: #44554c;
+  font-size: 0.85rem;
+}
+
+.admin-table__row {
+  border-top: 1px solid #eef2f0;
+}
+
+.admin-table__row:hover {
+  background: #fafcfb;
+}
+
+/* STATUS */
+.status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status--active {
+  background: #e6f4ec;
+  color: #2e7d57;
+}
+
+.status--disabled {
+  background: #fdecea;
+  color: #c62828;
+}
+
+/* ROLE BUTTON */
+.btn-role {
+  border: 1px solid #c8d3cd;
+  background: #f5f7f6;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.btn-role:hover {
+  background: #e9eeec;
+}
+
+/* TOGGLE BUTTON */
+.btn-toggle {
+  border: 1px solid #d6ded9;
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-toggle:hover {
+  background: #f3f6f4;
+}
+
+.admin {
+  background: linear-gradient(180deg, #eef5f1 0%, #e6f0ea 100%);
+  min-height: 100vh;
+}
+.container.py-4 {
+  position: relative;
+}
+
+.container.py-4::before {
+  content: "";
+  position: absolute;
+  inset: -40px -20px auto -20px;
+  height: 160px;
+  background: radial-gradient(
+    ellipse at top,
+    rgba(95,125,107,0.08),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+
+  .admin-table__head {
+    display: none;
+  }
+
+  .admin-table__row {
+    display: block;
+    padding: 16px;
+  }
+
+  .admin-table__row > div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .admin-table__row > div::before {
+    font-weight: 600;
+    color: #6b7f75;
+  }
+
+  /* labels */
+  .admin-table__row > div:nth-child(1)::before { content: "Name"; }
+  .admin-table__row > div:nth-child(2)::before { content: "Email"; }
+  .admin-table__row > div:nth-child(3)::before { content: "Role"; }
+  .admin-table__row > div:nth-child(4)::before { content: "Status"; }
+
+  .admin-table__row > div:last-child {
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+}
+
+</style>
+
+<%- include("../partials/footer") %>

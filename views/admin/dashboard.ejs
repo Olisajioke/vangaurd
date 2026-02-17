@@ -1,46 +1,75 @@
 <%- include("../partials/header") %>
 
-<div class="container py-4 admin-dashboard">
-  <h2 class="admin-dashboard__title mb-4">Admin Dashboard</h2>
+<div class="admin">
+  <div class="container py-4">
 
-  <div class="row g-4">
-
-    <div class="col-md-3">
-      <div class="admin-dashboard__card">
-        <div class="admin-dashboard__count"><%= counts.users %></div>
-        <div class="admin-dashboard__label">Users</div>
+    <div class="admin__header mb-4">
+      <h2 class="admin__title">Admin Dashboard</h2>
+      <div class="admin__subtitle">
+        System overview and management
       </div>
     </div>
 
-    <div class="col-md-3">
-      <div class="admin-dashboard__card">
-        <div class="admin-dashboard__count"><%= counts.posts %></div>
-        <div class="admin-dashboard__label">Articles</div>
-      </div>
-    </div>
+    <div class="row g-4">
 
-    <div class="col-md-3">
-      <div class="admin-dashboard__card">
-        <div class="admin-dashboard__count"><%= counts.jobs %></div>
-        <div class="admin-dashboard__label">Jobs</div>
+      <!-- USERS -->
+      <div class="col-md-3">
+        <a href="/admin/users" class="admin-tile admin-tile--link">
+          <div class="admin-tile__count"><%= counts.users %></div>
+          <div class="admin-tile__label">Users</div>
+        </a>
       </div>
-    </div>
 
-    <div class="col-md-3">
-      <div class="admin-dashboard__card">
-        <div class="admin-dashboard__count"><%= counts.market %></div>
-        <div class="admin-dashboard__label">Market Items</div>
+      <!-- POSTS -->
+      <div class="col-md-3">
+        <a href="/admin/posts" class="admin-tile admin-tile--link">
+          <div class="admin-tile__count"><%= counts.posts %></div>
+          <div class="admin-tile__label">Articles</div>
+        </a>
       </div>
-    </div>
 
-    <div class="col-12 text-end">
-      <a href="/admin/vanguard" class="btn btn-dark admin-dashboard__vanguard-btn">
-        <i class="bi bi-shield-lock me-1"></i>
-        Vanguard Code
-      </a>
+      <!-- JOBS -->
+      <div class="col-md-3">
+        <a href="/admin/jobs" class="admin-tile admin-tile--link">
+          <div class="admin-tile__count"><%= counts.jobs %></div>
+          <div class="admin-tile__label">Jobs</div>
+        </a>
+      </div>
+
+      <!-- MARKET -->
+      <div class="col-md-3">
+        <a href="/admin/market" class="admin-tile admin-tile--link">
+          <div class="admin-tile__count"><%= counts.market %></div>
+          <div class="admin-tile__label">Market Items</div>
+        </a>
+      </div>
+
+      <!-- VANGUARD -->
+      <div class="col-12 text-end">
+        <a href="/admin/vanguard" class="admin-btn">
+          <i class="bi bi-shield-lock me-1"></i>
+          Vanguard Control
+        </a>
+      </div>
+
     </div>
 
   </div>
 </div>
+
+
+<style>
+    .admin-tile--link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    }
+
+.admin-tile--link:hover {
+  color: inherit;
+  transform: translateY(-2px);
+    }
+
+</style>
 
 <%- include("../partials/footer") %>

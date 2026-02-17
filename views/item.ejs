@@ -107,7 +107,7 @@
       <% } %>
 
       <!-- ACTIONS -->
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 flex-wrap">
         <a href="/market" class="btn btn-outline-secondary">
           ← Back
         </a>
@@ -115,12 +115,34 @@
         <a href="/saved" class="btn btn-outline-dark">
           Saved Items
         </a>
+
+        <% if (userId === item.user_id || isAdmin) { %>
+
+          <button class="btn btn-outline-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editItemModal-<%= item.id %>">
+            <i class="fas fa-edit me-1"></i>
+            Edit
+          </button>
+
+          <button class="btn btn-outline-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteItemModal-<%= item.id %>">
+            <i class="fas fa-trash-alt me-1"></i>
+            Delete
+          </button>
+          <% if (userId === item.user_id || isAdmin) { %>
+            <%- include("partials/editItemModal", { item }) %>
+            <%- include("partials/deleteItemModal", { item }) %>
+          <% } %>
+        <% } %>
+
       </div>
+
 
     </div>
 
   </div>
 
 </div>
-
 <%- include("partials/footer") %>

@@ -73,9 +73,9 @@
 
 <style>
   .rel-hero-img {
-  height: 220px;
-  border-radius: 16px;
-  background: linear-gradient(135deg,#4b2e2b,#6a3f3a);
+  min-height: 48vh;        
+  max-height: 560px;         
+  border-radius: 18px;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -85,15 +85,72 @@
 .rel-hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(40,20,20,.45);
+  background: linear-gradient(rgba(40,20,20,.55), rgba(40,20,20,.55));
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 20px;
+  padding: 28px;
 }
+
+.rel-hero-overlay h2 {
+  letter-spacing: 2px;
+}
+
+
+.rel-add-card {
+  border-radius: 18px;
+  border: none;
+  background: linear-gradient(135deg,#ff5c7a,#d93c5f);
+  color: #fff;
+  transition: transform .18s ease, box-shadow .18s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.rel-add-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(217,60,95,.35);
+  color: #fff;
+}
+
+.rel-add-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 18px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Decorative big faint heart */
+.rel-add-card::before {
+  content: "❤";
+  position: absolute;
+  font-size: 160px;
+  color: rgba(255,255,255,.08);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+
+/* Icon heart */
+.rel-add-icon {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.rel-add-card p {
+  color: rgba(255,255,255,.85);
+}
+
 </style>
 
 <%- include("partials/footer") %>

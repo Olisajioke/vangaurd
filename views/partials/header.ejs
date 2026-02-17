@@ -217,11 +217,12 @@
 <% if (error && error.length > 0) { %>
   <div class="container mt-3">
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      <%= error[0] %>
+      <%= Array.isArray(error) ? error[0] : error %>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
   </div>
 <% } %>
+
 
 <main>
 

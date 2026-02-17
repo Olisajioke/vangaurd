@@ -8,9 +8,9 @@ import bcrypt from "bcrypt";
 import db from "./db.js"
 import nodemailer from "nodemailer";
 import dotenv from "dotenv"
-dotenv.config()
-
 import path from "path"
+import crypto from "crypto"
+
 
 // 🔎 TEST DB CONNECTION
 async function testDB() {
@@ -45,6 +45,8 @@ function calculateAge(dob) {
 //CONSTANTS
 const app = express();
 const port = 3000;
+dotenv.config()
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/uploads")
@@ -62,7 +64,14 @@ function requireLogin(req, res, next) {
   next()
 }
 
-
+// transponder setup
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.ADMIN_EMAIL,
+      pass: process.env.ADMIN_EMAIL_PASS
+    }
+  });
 
 const sessionConfig = {
   secret: "keyboard cat",
@@ -71,9 +80,12 @@ const sessionConfig = {
   rolling: true, // reset timer on every request
   cookie: {
     httpOnly: true,
+    secure: true, // only over HTTPS
     maxAge: 1000 * 60 * 20 // 20 minutes
   }
 }
+
+
 
 
 app.use(async (req, res, next) => {
@@ -297,15 +309,13 @@ app.get("/user/:id", requireLogin, (req, res) => {
   res.render("user", { user, savedItems })
 })
 
-// user login
-
+// user login get form
 app.get("/login", (req, res) => {
   res.render("login")
 })
 
 
-
-// handle login
+// LOGIN ROUTE
 app.post("/login", async (req, res) => {
   const { email, password } = req.body
 
@@ -316,19 +326,24 @@ app.post("/login", async (req, res) => {
 
   if (!user) return res.render("login", { error: "Invalid credentials" })
 
-  let match = false
-
-  // CASE 1 — already hashed
-  if (user.password.startsWith("$2")) {
-    match = await bcrypt.compare(password, user.password)
+  // 🔒 check active FIRST
+  if (Number(user.is_active) !== 1) {
+    return res.render("login", {
+      error: "Sorry but your account has been disabled. Please Contact admin on whatsapp or use the mail below."
+    })
   }
 
-  // CASE 2 — legacy plain password
+  let match = false
+
+  // hashed password
+  if (user.password.startsWith("$2")) {
+    match = await bcrypt.compare(password, user.password)
+  } 
+  // legacy plain
   else {
     match = password === user.password
 
     if (match) {
-      // upgrade to hash
       const newHash = await bcrypt.hash(password, 10)
       await db.query(
         "UPDATE users SET password=? WHERE id=?",
@@ -336,11 +351,105 @@ app.post("/login", async (req, res) => {
       )
     }
   }
+  
+  if (!match) 
+    return res.render("login", { error: "Invalid credentials" })
 
-  if (!match) return res.render("login", { error: "Invalid credentials" })
+  req.session.userId = user.id;
+  req.session.role = user.role;
 
-  req.session.userId = user.id
   req.session.save(() => res.redirect("/profile"))
+})
+
+// forgot password get form
+app.get("/forgot-password", (req, res) => {
+  res.render("forgotPassword");
+});
+
+//forgot password sendemail
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  const [[user]] = await db.query(
+    "SELECT id FROM users WHERE email=?",
+    [email]
+  );
+
+  if (!user) {
+    req.flash("error", "No account with that email");
+    return res.redirect("/forgot-password");
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 min
+
+  await db.query(
+    "UPDATE users SET reset_token=?, reset_expires=? WHERE id=?",
+    [token, expires, user.id]
+  );
+
+  const resetLink = `http://localhost:3000/reset-password/${token}`;
+
+  await transporter.sendMail({
+    to: email,
+    subject: "Vanguard Password Reset",
+    html: `
+      <p>You requested a password reset.</p>
+      <p><a href="${resetLink}">Click here to reset your password</a></p>
+      <p>This link expires in 30 minutes.</p>
+    `
+  });
+
+  req.flash("success", "Password reset link sent to your email");
+  res.redirect("/login");
+});
+
+// enter new password form
+app.get("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+
+  const [[user]] = await db.query(
+    "SELECT id FROM users WHERE reset_token=? AND reset_expires > NOW()",
+    [token]
+  );
+
+  if (!user) {
+    req.flash("error", "Reset link invalid or expired");
+    return res.redirect("/forgot-password");
+  }
+
+  res.render("resetPassword", { token });
+});
+
+//save new password
+app.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params
+  const { password, confirm_password } = req.body
+
+  if (password !== confirm_password) {
+    req.flash("error", "Passwords do not match")
+    return res.redirect(`/reset-password/${token}`)
+  }
+
+  const [[user]] = await db.query(
+    "SELECT id FROM users WHERE reset_token=? AND reset_expires > NOW()",
+    [token]
+  )
+
+  if (!user) {
+    req.flash("error", "Reset link invalid or expired")
+    return res.redirect("/forgot-password")
+  }
+
+  const hash = await bcrypt.hash(password, 10)
+
+  await db.query(
+    "UPDATE users SET password=?, reset_token=NULL, reset_expires=NULL WHERE id=?",
+    [hash, user.id]
+  )
+
+  req.flash("success", "Password updated successfully")
+  res.redirect("/login")
 })
 
 
@@ -506,7 +615,7 @@ app.put("/edituser/:id", requireLogin, upload.single("profilepic"), async (req, 
         values
       )
     }
-
+    req.flash("success", "Profile updated successfully!");
     res.redirect("/profile")
   } catch (err) {
     console.error(err)
@@ -521,6 +630,7 @@ app.delete("/deleteuser/:id", requireLogin, async (req, res) => {
   await db.query("DELETE FROM users WHERE id=?", [id])
 
   req.session.destroy(() => {
+    req.flash("success", "Profiled deleted successfully");
     res.redirect("/")
   })
 })
@@ -528,11 +638,10 @@ app.delete("/deleteuser/:id", requireLogin, async (req, res) => {
 // Logout route
 app.post("/logout", requireLogin, (req, res) => {
   req.session.destroy(() => {
+    req.flash("success", "Logged out successfully");
     res.redirect("/login")
   })
 })
-
-
 
 
 
@@ -551,8 +660,8 @@ app.get("/articles", requireLogin, async (req, res) => {
     WHERE p.type='article'
     ORDER BY p.created_at DESC
   `)
-
-  res.render("articles", { posts: articles })
+  const isAdmin = req.session.role === "admin";
+  res.render("articles", { posts: articles, isAdmin })
 })
 
 
@@ -600,7 +709,7 @@ app.post("/submit_story", requireLogin, upload.single("image"), async (req, res)
           WHERE id=? AND type='article'
         `, [title, subtitle, content, postId])
       }
-
+      req.flash("success", "Post edited successfully");
       res.redirect(`/view_posts/${postId}`)
 
     } else {
@@ -612,12 +721,12 @@ app.post("/submit_story", requireLogin, upload.single("image"), async (req, res)
         (id, user_id, type, title, subtitle, content, image1)
         VALUES (?, ?, 'article', ?, ?, ?, ?)
       `, [newId, userId, title, subtitle, content, image])
-
+      req.flash("success", "Story created successfully!");
       res.redirect(`/view_posts/${newId}`)
     }
 
   } catch (err) {
-    console.error(err)
+    req.flash("error", "Error saving story, try again");
     res.send("Article save error")
   }
 })
@@ -625,35 +734,34 @@ app.post("/submit_story", requireLogin, upload.single("image"), async (req, res)
 
 // View a single post
 app.get("/view_posts/:id", requireLogin, async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   const [[post]] = await db.query(`
     SELECT p.*, u.fname, u.lname
     FROM posts p
     LEFT JOIN users u ON p.user_id = u.id
     WHERE p.id=? AND p.type='article'
-  `, [id])
+  `, [id]);
 
   if (!post) return res.status(404).send("Post not found");
 
   const [comments] = await db.query(`
-  SELECT c.id, c.content, c.created_at, c.user_id, u.fname
-  FROM comments c
-  LEFT JOIN users u ON c.user_id = u.id
-  WHERE c.post_id=?
-  ORDER BY c.created_at ASC
-`, [id])
-
-
+    SELECT c.id, c.content, c.created_at, c.user_id, u.fname
+    FROM comments c
+    LEFT JOIN users u ON c.user_id = u.id
+    WHERE c.post_id=?
+    ORDER BY c.created_at ASC
+  `, [id]);
+    
   res.render("view_post", {
-  post,
-  comments,
-  editCommentId: req.query.edit,
-  currentUserId: req.session.userId,
-  isAdmin: req.session.role === "admin"
-  })
+    post,
+    comments,
+    currentUserId: req.session.userId,
+    isAdmin: req.session.role === "admin",
+    editCommentId: req.query.edit
+  });
+});
 
-})
 
 
 // add comments
@@ -674,7 +782,7 @@ app.post("/posts/:id/comments", requireLogin, async (req, res) => {
     [postId, req.session.userId, comment]
   );
 
-  req.flash("success_msg", "Comment created successfully");
+  req.flash("success", "Comment created successfully");
   res.redirect("/view_posts/" + postId);
 });
 
@@ -690,7 +798,7 @@ app.put("/posts/:postId/comments/:commentId/edit", requireLogin, async (req, res
     SET content = ?
     WHERE id = ?
   `, [comment, commentId]);
-
+     req.flash("success", "comment edited successfully");
   res.redirect("/view_posts/" + postId);
 });
 
@@ -701,7 +809,7 @@ app.post("/delete_post/:id", requireLogin, async (req, res) => {
 
   await db.query("DELETE FROM comments WHERE post_id=?", [id])
   await db.query("DELETE FROM posts WHERE id=?", [id])
-
+  req.flash("success", "Post deleted successfully");
   res.redirect("/articles")
 })
 
@@ -714,7 +822,7 @@ app.delete("/posts/:postId/comments/:commentId/delete", requireLogin, async (req
     "DELETE FROM comments WHERE id=? AND post_id=?",
     [commentId, postId]
   )
-
+  req.flash("success", "Comment deleted successfully")
   res.redirect("/view_posts/" + postId);
 })
 
@@ -745,9 +853,6 @@ app.get("/showjobs", requireLogin, async (req, res) => {
     isAdmin: req.session.role === "admin"
   })
 })
-
-
-
 
 
 // GET A SINGLE JOB
@@ -816,7 +921,7 @@ app.post("/createJobs", requireLogin, async (req, res) => {
     location,
     contact
   ]);
-
+  req.flash("success", "Job added successfully!");
   res.redirect("/showjobs");
 });
 
@@ -840,11 +945,10 @@ app.put("/editjob/:id", requireLogin, async (req, res) => {
     SET clinic=?, salary=?, description=?, location=?, contact=?
     WHERE post_id=?
   `, [clinic, salary, description, location, contact, id]);
+    req.flash("success", "Job edited successfully!");
 
   res.redirect("/showjobs");
 });
-
-
 
 
 //delete jobs
@@ -867,6 +971,7 @@ app.delete("/deletejob/:id", requireLogin, async (req, res) => {
   // delete job + linked post
   await db.query("DELETE FROM jobs WHERE post_id=?", [id]);
   await db.query("DELETE FROM posts WHERE id=?", [id]);
+  req.flash("success", "Job Detail deleted successfully!");
 
   res.redirect("/showjobs");
 });
@@ -895,8 +1000,8 @@ app.get("/market", requireLogin, async (req, res) => {
   )
 
   const savedIds = saved.map(s => s.post_id)
-
-  res.render("market", { items, savedIds, userId })
+  const isAdmin = req.session.role === "admin";
+  res.render("market", { items, savedIds, userId, isAdmin })
 })
 
 
@@ -939,9 +1044,11 @@ app.get("/item/:id", requireLogin, async (req, res) => {
     "SELECT 1 FROM saved_items WHERE user_id=? AND post_id=?",
     [userId, id]
   )
-  const isSaved = savedRows.length > 0
+  const isSaved = savedRows.length > 0;
+  const isAdmin = req.session.role === "admin";
+  const currentUserId = req.sessionID;
 
-  res.render("item", { item, isSaved })
+  res.render("item", { item, isSaved, isAdmin, currentUserId })
 })
 
 
@@ -993,42 +1100,42 @@ app.post("/createitem", requireLogin, upload.array("images", 3), async (req, res
 
 // EDIT ITEM AND UPDATE
 app.put("/edititem/:id", requireLogin, upload.array("images", 3), async (req, res) => {
-  const { id } = req.params
-  const { title, price, description, location, contact, condition_note } = req.body
+  const { id } = req.params;
+  const { title, price, description, location, contact, condition_note } = req.body;
 
-  const files = req.files || []
-  let image1 = null, image2 = null, image3 = null
+  const files = req.files || [];
+  let image1 = null, image2 = null, image3 = null;
 
   if (files.length > 0) {
-    image1 = files[0]?.filename || null
-    image2 = files[1]?.filename || null
-    image3 = files[2]?.filename || null
+    image1 = files[0]?.filename || null;
+    image2 = files[1]?.filename || null;
+    image3 = files[2]?.filename || null;
   }
 
   if (files.length > 0) {
     await db.query(`
       UPDATE posts
-      SET title=?, content=?, location=?, contact=?,
+      SET title=?, content=COALESCE(?, content), location=?, contact=?,
           image1=?, image2=?, image3=?
       WHERE id=?
-    `, [title, description, location, contact, image1, image2, image3, id])
+    `, [title, description, location, contact, image1, image2, image3, id]);
   } else {
     await db.query(`
       UPDATE posts
-      SET title=?, content=?, location=?, contact=?
+      SET title=?, content=COALESCE(?, content), location=?, contact=?
       WHERE id=?
-    `, [title, description, location, contact, id])
+    `, [title, description, location, contact, id]);
   }
 
   await db.query(`
     UPDATE market_items
     SET price=?, condition_note=?
     WHERE post_id=?
-  `, [price, condition_note, id])
+  `, [price, condition_note, id]);
 
-  req.flash("success", "Item updated successfully")
-  res.redirect("/market")
-})
+  req.flash("success", "Item updated successfully");
+  res.redirect("/market");
+});
 
 
 
@@ -1108,8 +1215,8 @@ app.get("/relationships", requireLogin, async (req, res) => {
     WHERE p.type = 'relationship'
     ORDER BY p.created_at DESC
   `)
-
-  res.render("relationships", { relationships: rows })
+    const isAdmin = req.session.role === "admin";
+  res.render("relationships", { relationships: rows, isAdmin})
 })
 
 // get one relationship
@@ -1124,8 +1231,9 @@ app.get("/relationships/:id", requireLogin, async (req, res) => {
   `, [id])
 
   const isOwner = req.session.userId === rel.user_id
+  const isAdmin = req.session.role === "admin";
 
-  res.render("relationshipView", { rel, isOwner })
+  res.render("relationshipView", { rel, isOwner, isAdmin})
 })
 
 
@@ -1195,7 +1303,7 @@ app.post(
           image3
         ]
       )
-      req.flash("success", "Profile crerated successfully");
+      req.flash("success", "Profile created successfully");
       res.redirect("/relationships");
 
     } catch (err) {
@@ -1204,6 +1312,9 @@ app.post(
     }
   }
 )
+
+
+
 
 // edit relationship
 app.post(
@@ -1265,12 +1376,10 @@ app.post(
       image3,
       id
     ])
-
+    req.flash("success", "Profile updated Successfully!");
     res.redirect("/relationships/" + id)
   }
 )
-
-
 
 // delete relationship
 app.post("/relationships/delete/:id", requireLogin, async (req, res) => {
@@ -1279,6 +1388,7 @@ app.post("/relationships/delete/:id", requireLogin, async (req, res) => {
   await db.query("DELETE FROM relationship_profiles WHERE post_id=?", [id])
   await db.query("DELETE FROM posts WHERE id=?", [id])
 
+  req.flash("success", "Profile deleted successfully!");
   res.redirect("/relationships")
 })
 
@@ -1286,7 +1396,7 @@ app.post("/relationships/delete/:id", requireLogin, async (req, res) => {
 //CLINIC REVIEWS
 
 // Get Clinic review form
-app.get("/reviews/new", requireLogin, (req, res) => {
+app.get("/reviews/create", requireLogin, (req, res) => {
   res.render("clinicreviewForm")
 })
 
@@ -1313,11 +1423,11 @@ app.post("/reviews/create", requireLogin, async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [postId, userId, clinic_name, rating, pros, cons, recommendation]
     )
-
-    res.redirect("/reviews/" + postId)
+    req.flash("success", "Review Created Successfully!");
+    res.redirect("/reviews/" + postId);
 
   } catch (err) {
-    console.error("CREATE REVIEW ERROR:", err)
+    req.flash("error", "CREATE REVIEW ERROR, TRY AGAIN:")
     res.status(500).send("Error creating review")
   }
 })
@@ -1343,14 +1453,13 @@ app.get("/reviews", requireLogin, async (req, res) => {
   sql += " ORDER BY p.created_at DESC";
 
   const [rows] = await db.query(sql, params);
+  const isAdmin = req.session.role === "admin";
 
-  res.render("showallreviews", {
+  res.render("showallreviews", { isAdmin, 
     reviews: rows,
     query: clinic || ""
   });
 });
-
-
 
 
 // single clinic review route
@@ -1376,6 +1485,7 @@ app.get("/reviews/:id", requireLogin, async (req, res) => {
 
   // ⭐ review ownership
   const isOwner = String(review.user_id) === String(userId)
+  const isAdmin = req.session.role === "admin";
 
   // ⭐ comment ownership
   const commentsWithOwner = comments.map(c => ({
@@ -1384,14 +1494,13 @@ app.get("/reviews/:id", requireLogin, async (req, res) => {
   }))
 
   res.render("singlereviewView", {
+    isAdmin,
     review,
     comments: commentsWithOwner,
     isOwner,   // 👈 REQUIRED for review buttons
     userId
   })
 })
-
-
 
 
 // EDIT COMMENT
@@ -1403,6 +1512,7 @@ app.post("/reviews/comments/edit/:postId/:commentId", requireLogin, async (req, 
     "UPDATE comments SET content=? WHERE id=? AND post_id=?",
     [content, commentId, postId]
   )
+  req.flash("success", "Comment edited successfully");
 
   res.redirect("/reviews/" + postId)
 })
@@ -1416,12 +1526,11 @@ app.post("/reviews/comments/delete/:postId/:commentId", requireLogin, async (req
     "DELETE FROM comments WHERE id=? AND post_id=?",
     [commentId, postId]
   )
-
+  req.flash("success", "Post deleted successfully");
   res.redirect("/reviews/" + postId)
 })
 
 //get edit clinic view
-
 app.get("/reviews/edit/:id",requireLogin, async (req, res) => {
   const { id } = req.params
 
@@ -1434,49 +1543,28 @@ app.get("/reviews/edit/:id",requireLogin, async (req, res) => {
 })
 
 // post edit clinic view
-
 app.post("/reviews/edit/:id", requireLogin, async (req, res) => {
   const { id } = req.params
-  const { rating, pros, cons, recommendation } = req.body
+  const {clinic_name, rating, pros, cons, recommendation } = req.body
 
   await db.query(
-    `UPDATE clinic_reviews
-     SET rating=?, pros=?, cons=?, recommendation=?
-     WHERE post_id=?`,
-    [rating, pros, cons, recommendation, id]
+  `UPDATE clinic_reviews
+   SET clinic_name=?, rating=?, pros=?, cons=?, recommendation=?
+   WHERE post_id=?`,
+  [clinic_name, rating, pros, cons, recommendation, id]
   )
 
+  req.flash("success", "Post edited successfully");
   res.redirect("/reviews/" + id)
 })
 
 // delete clinic review
 app.post("/reviews/delete/:id", requireLogin, async (req,res)=>{
   const { id } = req.params
-
-  await db.query(
-    "DELETE FROM clinic_reviews WHERE post_id=?",
-    [id]
-  )
-
+  await db.query("DELETE FROM clinic_reviews WHERE post_id=?", [id])
+  await db.query("DELETE FROM posts WHERE id=?", [id])
+  req.flash("success", "Review deleted successfully");
   res.redirect("/reviews")
-})
-
-
-
-
-// edit clinic review
-app.post("/reviews/edit/:id", requireLogin, async (req,res)=>{
-  const { id } = req.params
-  const { rating, pros, cons, recommendation } = req.body
-
-  await db.query(
-    `UPDATE clinic_reviews
-     SET rating=?, pros=?, cons=?, recommendation=?
-     WHERE post_id=?`,
-    [rating, pros, cons, recommendation, id]
-  )
-
-  res.redirect("/reviews/view/" + id)
 })
 
 
@@ -1491,7 +1579,7 @@ app.post("/reviews/comments/add/:reviewId", requireLogin, async (req,res)=>{
      VALUES (?, ?, ?)`,
     [reviewId, userId, content]
   )
-
+  req.flash("success", "Comment added successfully");
   res.redirect("/reviews/" + reviewId)
 
 })
@@ -1514,12 +1602,166 @@ app.get("/admin", requireAdmin, requireLogin, async (req, res) => {
 
 
 // manage users
-app.get("/admin/users", requireAdmin, requireLogin, async (req, res) => {
-  const [users] = await db.query(
-    "SELECT id, fname, lname, email, role FROM users ORDER BY created_at DESC"
-  )
-  res.render("admin/users", { users })
-})
+app.get("/admin/users", requireAdmin, async (req, res) => {
+  const [users] = await db.query(`
+    SELECT id, fname, lname, email, is_active, role
+    FROM users
+    ORDER BY id DESC
+  `);
+
+  res.render("admin/users", {
+    users,
+    currentAdminId: req.session.userId
+  });
+});
+
+
+
+// MAKE OR REMOVE ADMIN POSITION:
+app.post("/admin/users/:id/role", requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { currentAdminId } = req.body;
+
+  // prevent self role change
+  if (parseInt(id) === parseInt(currentAdminId)) {
+    return res.redirect("/admin/users");
+  }
+
+  const [rows] = await db.query(
+    "SELECT role FROM users WHERE id = ?",
+    [id]
+  );
+
+  if (!rows.length) return res.redirect("/admin/users");
+
+  const newRole = rows[0].role === "admin" ? "user" : "admin";
+
+  await db.query(
+    "UPDATE users SET role = ? WHERE id = ?",
+    [newRole, id]
+  );
+  if (newRole === "admin")
+  {
+    req.flash("success", "Doctor successfully upgraded to admin")
+  } else {
+    req.flash("success", "Doctor successfully demoted to user")
+  }
+  
+  res.redirect("/admin/users");
+});
+
+
+//TOGGLE USERS OFF OR ON
+app.post("/admin/users/:id/toggle", requireAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  // get current state
+  const [[user]] = await db.query(
+    "SELECT is_active FROM users WHERE id = ?",
+    [id]
+  );
+
+  if (!user) {
+    req.flash("error", "User not found");
+    return res.redirect("/admin/users");
+  }
+
+  // toggle
+  await db.query(
+    "UPDATE users SET is_active = NOT is_active WHERE id = ?",
+    [id]
+  );
+
+  // flash based on previous state
+  if (user.is_active) {
+    req.flash("success", "User disabled successfully!");
+  } else {
+    req.flash("success", "User activated successfully!");
+  }
+
+  res.redirect("/admin/users");
+});
+
+
+
+// ADMIN POSTS LIST
+app.get("/admin/posts", requireAdmin, async (req, res) => {
+  const [posts] = await db.query(`
+    SELECT p.id, p.title, p.created_at,
+           u.fname, u.lname
+    FROM posts p
+    JOIN users u ON p.user_id = u.id
+    ORDER BY p.created_at DESC
+  `);
+
+  res.render("admin/posts", { posts });
+});
+
+
+//ADMIN CONTROL:  DELETE POST
+app.post("/admin/posts/:id/delete", requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+
+  // remove dependent subtype records first
+  await db.query(
+    "DELETE FROM relationship_profiles WHERE post_id = ?",
+    [id]
+  );
+
+  //  other subtype tables, will be added  here leta
+  await db.query("DELETE FROM clinic_profiles WHERE post_id = ?", [id]);
+  await db.query("DELETE FROM market_items WHERE post_id = ?", [id]);
+
+  // now delete post
+  await db.query(
+    "DELETE FROM posts WHERE id = ?",
+    [id]
+  );
+
+  req.flash("success", "Post deleted successfully");
+  res.redirect("/admin/posts");
+});
+
+
+
+// ADMIN CONTROL: EDIT POST GET
+app.get("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);   // ← important
+
+  const [rows] = await db.query(
+    "SELECT id, title, content FROM posts WHERE id = ?",
+    [id]
+  );
+
+  console.log("EDIT ROW:", rows);
+
+  if (!rows.length) {
+    req.flash("error", "Post not found");
+    return res.redirect("/admin/posts");
+  }
+
+  res.render("admin/editpost", { post: rows[0] });
+});
+
+
+
+// ADMIN CONTROL: EDIT POST, POST
+app.post("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+
+  
+  const { title, content } = req.body;
+
+  await db.query(
+    "UPDATE posts SET title = ?, content = ? WHERE id = ?",
+    [title, content, id]
+  );
+ 
+
+  req.flash("success", "Great job admin, post updated successfully!");
+  res.redirect("/admin/posts");
+});
+
 
 // ADD VANGUARD CODE:
 app.get("/admin/vanguard", requireAdmin, async (req, res) => {
@@ -1565,7 +1807,7 @@ app.post("/admin/vanguard/update", requireAdmin, async (req, res) => {
       subject: "Vanguard Code Rotated",
       text: `The Vanguard access code has been updated.\n\nNew Code: ${vanguard_code}\n\nTime: ${new Date().toISOString()}`
     })
-
+    req.flash("success", "Vanguard code changed successfully!");
     res.redirect("/admin/vanguard")
 
   } catch (err) {
@@ -1594,6 +1836,7 @@ app.post("/patients", requireLogin, async (req, res) => {
     `INSERT INTO patients SET ?`,
     { ...data, doctor_id: doctorId }
   );
+  req.flash("success", "Patient's folder created successfully!");
   res.redirect("/patients");
 });
 
@@ -1675,6 +1918,7 @@ app.post("/patients/:id/update", requireLogin, async (req, res) => {
     WHERE patient_id=? AND doctor_id=?`,
     [data, id, doctorId]
   );
+  req.flash("success", "Patient's details updated successfully!");
   res.redirect("/patients");
 });
 
@@ -1689,7 +1933,7 @@ app.post("/patients/:id/delete", requireLogin, async (req, res) => {
      AND doctor_id = ?`,
     [id, doctorId]
   );
-
+  req.flash("success", "Patient's details deleted successfully!");
   res.redirect("/patients");
 });
 
@@ -1699,21 +1943,13 @@ app.post("/contact", async (req, res) => {
   const { Email, Message } = req.body;
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "optometristvanguard@gmail.com",
-        pass: "tndmevymzenqdpjy"
-      }
-    });
-
-    await transporter.sendMail({
-      from: '"Vanguard Contact" <optometristvanguard@gmail.com>',
-      replyTo: Email,
-      to: "optometristvanguard@gmail.com",
-      subject: "New Contact Message",
-      text: `From: ${Email}\n\n${Message}`
-    });
+      await transporter.sendMail({
+        from: '"Vanguard Contact" <optometristvanguard@gmail.com>',
+        replyTo: Email,
+        to: "optometristvanguard@gmail.com",
+        subject: "New Contact Message",
+        text: `From: ${Email}\n\n${Message}`
+      });
 
     res.send("Message sent successfully, go back to the homepage.");
   } catch (err) {

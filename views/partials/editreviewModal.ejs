@@ -4,12 +4,19 @@
 
       <form action="/reviews/edit/<%= review.post_id %>" method="POST">
 
-        <div class="modal-header">
+        <div class="editheader modal-header">
           <h5 class="modal-title">Edit Review</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="modal-body">
+        <div class="editbody modal-body">
+
+          <div class="mb-3">
+            <label class="form-label">Clinic Name</label>
+            <input name="clinic_name"
+                   class="form-control"
+                   value="<%= review.clinic_name %>">
+          </div>
 
           <div class="mb-3">
             <label class="form-label">Rating</label>
@@ -55,3 +62,46 @@
     </div>
   </div>
 </div>
+
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
+
+<script>
+document.getElementById('editReviewModal')
+  .addEventListener('shown.bs.modal', function () {
+
+    if (!CKEDITOR.instances.editPros) {
+      CKEDITOR.replace('editPros', { height: 140 });
+    }
+
+    if (!CKEDITOR.instances.editCons) {
+      CKEDITOR.replace('editCons', { height: 140 });
+    }
+
+    if (!CKEDITOR.instances.editRec) {
+      CKEDITOR.replace('editRec', { height: 160 });
+    }
+
+});
+</script>
+<script>
+document.getElementById('editReviewModal')
+  .addEventListener('hidden.bs.modal', function () {
+
+    ['editPros','editCons','editRec'].forEach(id=>{
+      if (CKEDITOR.instances[id]) {
+        CKEDITOR.instances[id].destroy(true);
+      }
+    });
+
+});
+</script>
+
+<style>
+    .editheader {
+        background-color: goldenrod;
+    }
+
+    .editbody {
+        background-color: rgb(161, 221, 161);
+    }
+</style>

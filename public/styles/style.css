@@ -739,7 +739,69 @@ section {
 
 
 
-/*  VANGUARD CODE*/
+/*  UPDATED ADMIN CODE*/
+.admin {
+  background: #f5f7f6;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.admin__title {
+  font-weight: 600;
+  color: #2f3e36;
+}
+
+.admin__subtitle {
+  color: #7a8a83;
+  font-size: 0.95rem;
+}
+
+/* TILES */
+.admin-tile {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px 18px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #e7ecea;
+
+  transition: all 0.2s ease;
+}
+
+.admin-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.admin-tile__count {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #5f7d6b;
+}
+
+.admin-tile__label {
+  font-size: 0.85rem;
+  color: #7a8a83;
+  margin-top: 2px;
+}
+
+/* BUTTON */
+.admin-btn {
+  background: #2f3e36;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+}
+
+.admin-btn:hover {
+  background: #3d5248;
+  color: #fff;
+}
+
 /* ===== VANGUARD ADMIN PAGE ===== */
 
 .admin-vanguard-page {
@@ -980,3 +1042,63 @@ section {
   color: #374151;
 }
 
+/* PROFILE PAGE */
+
+/* NAV CONTAINER */
+.profile-nav {
+  display: grid;
+  gap: 12px;
+}
+
+/* CARD BASE */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 14px 16px;
+  border-radius: 14px;
+
+  background: #5f7d6b; /* dull green */
+  color: #f4f6f5;
+  text-decoration: none;
+  font-weight: 500;
+
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+
+  transition: all 0.25s ease;
+}
+
+/* ICON */
+.profile-card i {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* TEXT */
+.profile-card span {
+  flex: 1;
+}
+
+/* HOVER MAGIC */
+.profile-card:hover {
+  background: #6f907c;
+
+  box-shadow:
+    0 0 0 1px rgba(212,175,55,0.35),
+    0 6px 18px rgba(212,175,55,0.25);
+
+  transform: translateY(-2px);
+
+  color: #ffffff;
+}
+
+/* ACTIVE STATE */
+.profile-card.active {
+  background: #6f907c;
+  box-shadow:
+    0 0 0 1px rgba(212,175,55,0.45),
+    0 8px 22px rgba(212,175,55,0.35);
+}

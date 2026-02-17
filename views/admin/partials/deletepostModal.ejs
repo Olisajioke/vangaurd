@@ -1,0 +1,40 @@
+<div class="modal fade"
+     id="deletePostModal-<%= post.id %>"
+     tabindex="-1"
+     aria-hidden="true">
+
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Post</h5>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        Are you sure you want to delete:
+        <strong><%= post.title %></strong> ?
+        <div class="text-muted small mt-2">
+          This action cannot be undone.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light"
+                data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <form method="POST"
+              action="/admin/posts/<%= post.id %>/delete">
+          <button class="btn btn-danger">
+            Delete
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

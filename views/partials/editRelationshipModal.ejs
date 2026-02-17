@@ -1,0 +1,135 @@
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editRelModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rel-edit-modal rounded-4">
+
+      <form action="/relationships/edit/<%= rel.post_id %>"
+            method="POST"
+            enctype="multipart/form-data">
+
+        <!-- Romantic Header -->
+        <div class="rel-edit-header text-center text-white">
+          <div class="rel-edit-title">Edit Your Love Profile</div>
+          <div class="rel-edit-sub">Let your story shine a little brighter ✨</div>
+          <button type="button" class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- BASIC INFO -->
+          <div class="rel-edit-section">
+            <div class="rel-edit-section-title">Basic Details</div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="rel-label">Name</label>
+                <input name="name" class="form-control rel-input"
+                       value="<%= rel.name %>">
+              </div>
+
+              <div class="col-md-3">
+                <label class="rel-label">Age</label>
+                <input name="age" class="form-control rel-input"
+                       value="<%= rel.age %>">
+              </div>
+
+              <div class="col-md-3">
+                <label class="rel-label">Sex</label>
+                <input name="sex" class="form-control rel-input"
+                       value="<%= rel.sex %>">
+              </div>
+
+              <div class="col-md-6">
+                <label class="rel-label">City</label>
+                <input name="city" class="form-control rel-input"
+                       value="<%= rel.city %>">
+              </div>
+
+              <div class="col-md-6">
+                <label class="rel-label">Looking For</label>
+                <input name="looking_for" class="form-control rel-input"
+                       value="<%= rel.looking_for %>">
+              </div>
+
+              <div class="col-12">
+                <label class="rel-label">WhatsApp</label>
+                <input name="contact" class="form-control rel-input"
+                       value="<%= rel.contact %>">
+              </div>
+            </div>
+          </div>
+
+          <!-- STORY -->
+          <div class="rel-edit-section">
+            <div class="rel-edit-section-title">Your Story</div>
+
+            <label class="rel-label">About Me</label>
+            <textarea name="bio" rows="3"
+                      class="form-control rel-input"><%= rel.bio %></textarea>
+
+            <label class="rel-label mt-3">Personal Thought</label>
+            <textarea name="thought" rows="3"
+                      class="form-control rel-input"><%= rel.thought %></textarea>
+          </div>
+
+          <!-- IMAGES -->
+          <div class="rel-edit-section">
+            <div class="rel-edit-section-title">Photos</div>
+
+            <div class="row g-3">
+
+              <div class="col-md-4">
+                <div class="rel-img-card">
+                  <% if (rel.image1) { %>
+                    <img src="/uploads/<%= rel.image1 %>" class="rel-img-preview">
+                  <% } else { %>
+                    <div class="rel-img-placeholder">No photo</div>
+                  <% } %>
+                  <input type="file" name="images" class="form-control rel-file">
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="rel-img-card">
+                  <% if (rel.image2) { %>
+                    <img src="/uploads/<%= rel.image2 %>" class="rel-img-preview">
+                  <% } else { %>
+                    <div class="rel-img-placeholder">No photo</div>
+                  <% } %>
+                  <input type="file" name="images" class="form-control rel-file">
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="rel-img-card">
+                  <% if (rel.image3) { %>
+                    <img src="/uploads/<%= rel.image3 %>" class="rel-img-preview">
+                  <% } else { %>
+                    <div class="rel-img-placeholder">No photo</div>
+                  <% } %>
+                  <input type="file" name="images" class="form-control rel-file">
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-0 justify-content-between px-4 pb-4">
+          <button type="button" class="btn btn-light"
+                  data-bs-dismiss="modal">
+            Cancel
+          </button>
+
+          <button class="btn rel-save-btn">
+            Save Changes
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
