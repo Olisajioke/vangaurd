@@ -47,6 +47,29 @@ const app = express();
 const port = 3000;
 dotenv.config()
 
+
+const sessionConfig = {
+  secret: "keyboard cat",
+  resave: false,
+  saveUninitialized: false,
+  rolling: true, // reset timer on every request
+  cookie: {
+    httpOnly: true,
+    secure: true, // only over HTTPS
+    maxAge: 1000 * 60 * 20 // 20 minutes
+  }
+}
+// Session middleware (required for flash)
+app.use(session({
+  secret: 'ExpressSessionMiddleWareKey',  // i have to replace this with a secure key in production
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Flash middleware
+app.use(session(sessionConfig))
+app.use(flash())
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/uploads")
@@ -64,7 +87,7 @@ function requireLogin(req, res, next) {
   next()
 }
 
-// transponder setup
+// Email transponder setup
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -73,18 +96,39 @@ const transporter = nodemailer.createTransport({
     }
   });
 
-const sessionConfig = {
-  secret: "keyboard cat",
-  resave: false,
-  saveUninitialized: false,
-  rolling: true, // reset timer on every request
-  cookie: {
-    httpOnly: true,
-    secure: true, // only over HTTPS
-    maxAge: 1000 * 60 * 20 // 20 minutes
-  }
-}
 
+  // notices caller
+  app.use((req, res, next) => {
+  res.locals.activeNotices = [];
+  res.locals.popupNotice = null;
+  next();
+});
+
+
+
+// notices middleware
+app.use(async (req, res, next) => {
+  try {
+    if (req.session.user) {
+      const [rows] = await db.query(`
+        SELECT *
+        FROM notices
+        WHERE is_active = 1
+        AND (expires_at IS NULL OR expires_at > NOW())
+        ORDER BY created_at DESC
+        LIMIT 1
+      `);
+
+      res.locals.popupNotice = rows[0] || null;
+    } else {
+      res.locals.popupNotice = null;
+    }
+  } catch (e) {
+    res.locals.popupNotice = null;
+  }
+
+  next();
+});
 
 
 
@@ -141,16 +185,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Session middleware (required for flash)
-app.use(session({
-  secret: 'ExpressSessionMiddleWareKey',  // i have to replace this with a secure key in production
-  resave: false,
-  saveUninitialized: true
-}));
-
-// Flash middleware
-app.use(session(sessionConfig))
-app.use(flash())
 
 // Make flash messages available in templates
 app.use((req, res, next) => {
@@ -466,8 +500,6 @@ app.post("/user/delete/:id", requireLogin, async (req, res) => {
 })
 
 
-
-
 //profile page
 app.get("/profile", requireLogin, async (req, res) => {
 
@@ -536,24 +568,42 @@ app.get("/profile", requireLogin, async (req, res) => {
       patientCount = p.count;
     } catch {}
 
+    // ACTIVE NOTICES
+  let activeNotices = [];
+
+  try {
+      const [rows] = await db.query(`
+    SELECT id, title, message
+    FROM notices
+    WHERE is_active = 1
+      AND (expires_at IS NULL OR expires_at > NOW())
+    ORDER BY created_at DESC
+  `);
+
+    activeNotices = rows;
+  } catch (e) {
+    console.log("Notice load error", e);
+  }
+
+
     res.render("profile", {
-      user,
-      stats: {
-        posts: postCount.count,
-        saved: savedCount.count,
-        relationships: relCount,
-        articles: articleCount,
-        patients: patientCount
-      }
-    });
+    user,
+    stats: {
+      posts: postCount.count,
+      saved: savedCount.count,
+      relationships: relCount,
+      articles: articleCount,
+      patients: patientCount
+    },
+    activeNotices
+  });
+
 
   } catch (err) {
     console.error("PROFILE ERROR →", err);
     res.send("Profile load error");
   }
 });
-
-
 
 // EDIT USER WITH DB
 app.put("/edituser/:id", requireLogin, upload.single("profilepic"), async (req, res) => {
@@ -638,7 +688,6 @@ app.delete("/deleteuser/:id", requireLogin, async (req, res) => {
 // Logout route
 app.post("/logout", requireLogin, (req, res) => {
   req.session.destroy(() => {
-    req.flash("success", "Logged out successfully");
     res.redirect("/login")
   })
 })
@@ -1594,7 +1643,8 @@ app.get("/admin", requireAdmin, requireLogin, async (req, res) => {
       (SELECT COUNT(*) FROM posts) AS posts,
       (SELECT COUNT(*) FROM jobs) AS jobs,
       (SELECT COUNT(*) FROM market_items) AS market,
-      (SELECT COUNT(*) FROM clinic_reviews) AS reviews
+      (SELECT COUNT(*) FROM clinic_reviews) AS reviews,
+      (SELECT COUNT(*) FROM notices) AS notices
   `)
 
   res.render("admin/dashboard", { counts })
@@ -1602,7 +1652,7 @@ app.get("/admin", requireAdmin, requireLogin, async (req, res) => {
 
 
 // manage users
-app.get("/admin/users", requireAdmin, async (req, res) => {
+app.get("/admin/users", requireLogin, requireAdmin, async (req, res) => {
   const [users] = await db.query(`
     SELECT id, fname, lname, email, is_active, role
     FROM users
@@ -1652,7 +1702,7 @@ app.post("/admin/users/:id/role", requireAdmin, async (req, res) => {
 
 
 //TOGGLE USERS OFF OR ON
-app.post("/admin/users/:id/toggle", requireAdmin, async (req, res) => {
+app.post("/admin/users/:id/toggle", requireLogin, requireAdmin, async (req, res) => {
   const { id } = req.params;
 
   // get current state
@@ -1685,7 +1735,7 @@ app.post("/admin/users/:id/toggle", requireAdmin, async (req, res) => {
 
 
 // ADMIN POSTS LIST
-app.get("/admin/posts", requireAdmin, async (req, res) => {
+app.get("/admin/posts", requireLogin, requireAdmin, async (req, res) => {
   const [posts] = await db.query(`
     SELECT p.id, p.title, p.created_at,
            u.fname, u.lname
@@ -1699,24 +1749,19 @@ app.get("/admin/posts", requireAdmin, async (req, res) => {
 
 
 //ADMIN CONTROL:  DELETE POST
-app.post("/admin/posts/:id/delete", requireAdmin, async (req, res) => {
+app.post("/admin/posts/:id/delete", requireLogin, requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
 
-  // remove dependent subtype records first
-  await db.query(
-    "DELETE FROM relationship_profiles WHERE post_id = ?",
-    [id]
-  );
-
-  //  other subtype tables, will be added  here leta
-  await db.query("DELETE FROM clinic_profiles WHERE post_id = ?", [id]);
+  // dependent subtype records
+  await db.query("DELETE FROM relationship_profiles WHERE post_id = ?", [id]);
+  await db.query("DELETE FROM clinic_reviews WHERE post_id = ?", [id]);
   await db.query("DELETE FROM market_items WHERE post_id = ?", [id]);
 
-  // now delete post
-  await db.query(
-    "DELETE FROM posts WHERE id = ?",
-    [id]
-  );
+  // comments depend on posts
+  await db.query("DELETE FROM comments WHERE post_id = ?", [id]);
+
+  // now safe to delete post
+  await db.query("DELETE FROM posts WHERE id = ?", [id]);
 
   req.flash("success", "Post deleted successfully");
   res.redirect("/admin/posts");
@@ -1724,8 +1769,9 @@ app.post("/admin/posts/:id/delete", requireAdmin, async (req, res) => {
 
 
 
+
 // ADMIN CONTROL: EDIT POST GET
-app.get("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
+app.get("/admin/posts/:id/edit", requireLogin, requireAdmin, async (req, res) => {
   const id = Number(req.params.id);   // ← important
 
   const [rows] = await db.query(
@@ -1746,7 +1792,7 @@ app.get("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
 
 
 // ADMIN CONTROL: EDIT POST, POST
-app.post("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
+app.post("/admin/posts/:id/edit", requireLogin, requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
 
   
@@ -1764,7 +1810,7 @@ app.post("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
 
 
 // ADD VANGUARD CODE:
-app.get("/admin/vanguard", requireAdmin, async (req, res) => {
+app.get("/admin/vanguard", requireLogin, requireAdmin, async (req, res) => {
   try {
     const [rows] = await db.query(
       "SELECT vanguard_code FROM site_settings WHERE id = 1"
@@ -1782,7 +1828,7 @@ app.get("/admin/vanguard", requireAdmin, async (req, res) => {
 
 
 // UPDATE VANGUARD CODE
-app.post("/admin/vanguard/update", requireAdmin, async (req, res) => {
+app.post("/admin/vanguard/update", requireLogin, requireAdmin, async (req, res) => {
   try {
     const { vanguard_code } = req.body
 
@@ -1816,7 +1862,81 @@ app.post("/admin/vanguard/update", requireAdmin, async (req, res) => {
   }
 })
 
+//ADMIN NOTICES
 
+// GET ADMIN NOTICES
+app.get("/admin/notices/new", requireLogin, requireAdmin, (req, res) => {
+  res.render("admin/new_notice");
+});
+
+
+// POST NOTICES
+app.post("/admin/notices", requireLogin, requireAdmin, async (req, res) => {
+  const { title, message, duration } = req.body;
+
+  let expiresAt = null;
+
+  if (duration && duration != "0") {
+    expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + parseInt(duration));
+  }
+
+  await db.query(
+    "INSERT INTO notices (title, message, expires_at) VALUES (?, ?, ?)",
+    [title, message, expiresAt]
+  );
+
+  res.redirect("/admin");
+});
+
+// GET NOTICE PAGE
+app.get("/admin/notices", requireLogin, requireAdmin, async (req, res) => {
+  const [notices] = await db.query(`
+    SELECT * FROM notices
+    ORDER BY created_at DESC
+  `);
+
+  res.render("admin/notices", { notices });
+});
+
+// edit notice
+app.get("/admin/notices/:id/edit", requireLogin, requireAdmin, async (req, res) => {
+  const [rows] = await db.query(
+    "SELECT * FROM notices WHERE id = ?",
+    [req.params.id]
+  );
+
+  res.render("admin/edit-notice", { notice: rows[0] });
+});
+
+app.post("/admin/notices/:id/edit", requireAdmin, requireLogin, async (req, res) => {
+  const { title, message, duration } = req.body;
+
+  let expiresAt = null;
+
+  if (duration && duration !== "0") {
+    expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + parseInt(duration));
+  }
+
+  await db.query(
+    "UPDATE notices SET title=?, message=?, expires_at=? WHERE id=?",
+    [title, message, expiresAt, req.params.id]
+  );
+
+  res.redirect("/admin/notices");
+});
+
+//DELETE NOTICE
+
+app.post("/admin/notices/:id/delete", requireLogin, requireAdmin, async (req, res) => {
+  await db.query(
+    "DELETE FROM notices WHERE id=?",
+    [req.params.id]
+  );
+
+  res.redirect("/admin/notices");
+});
 
 // PATIENTS' DATA
 
@@ -1889,19 +2009,15 @@ app.get("/patients/:id/edit", requireLogin, async (req, res) => {
   const id = req.params.id;
 
   const [rows] = await db.query(
-    `SELECT * FROM patients
-     WHERE patient_id=? AND doctor_id=?`,
+    "SELECT * FROM patients WHERE patient_id=? AND doctor_id=?",
     [id, doctorId]
   );
 
-  if (!rows.length) {
-    return res.status(404).send("Patient not found");
-  }
+  if (!rows.length) return res.status(404).send("Patient not found");
 
-  res.render("patients/form", {
-    patient: rows[0]
-  });
+  res.render("patients/form", { patient: rows[0] });
 });
+
 
 
 

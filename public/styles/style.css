@@ -1102,3 +1102,24 @@ section {
     0 0 0 1px rgba(212,175,55,0.45),
     0 8px 22px rgba(212,175,55,0.35);
 }
+
+
+/* NOTICES**/
+.notice-card {
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  padding: 1rem 1.2rem;
+  border-radius: .8rem;
+  margin-bottom: .6rem;
+}
+
+.notice-card__title {
+  font-weight: 600;
+  color: #664d03;
+  margin-bottom: .2rem;
+}
+
+.notice-card__message {
+  font-size: .9rem;
+  color: #664d03;
+}

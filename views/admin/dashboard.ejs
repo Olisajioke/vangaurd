@@ -1,53 +1,140 @@
 <%- include("../partials/header") %>
 
 <div class="admin">
-  <div class="container py-4">
+  <div class="container py-5">
 
-    <div class="admin__header mb-4">
-      <h2 class="admin__title">Admin Dashboard</h2>
-      <div class="admin__subtitle">
-        System overview and management
+    <!-- HEADER -->
+    <div class="admin-header d-flex justify-content-between align-items-center mb-5">
+      <div>
+        <h2 class="admin-title mb-1">
+          <i class="fas fa-shield-alt me-2 text-warning"></i>
+          Admin Dashboard
+        </h2>
+        <div class="admin-subtitle">System overview and controls</div>
+      </div>
+      <div class="admin-actions d-flex gap-2">
+        <a href="/admin/posts/new" class="admin-btn admin-btn--primary">
+          <i class="fas fa-plus me-1"></i> New Post
+        </a>
+        <a href="/admin/notices/new" class="admin-btn admin-btn--notice">
+          <i class="fas fa-bullhorn me-1"></i> New Notice
+        </a>
+        <a href="/" class="admin-btn">
+          <i class="fas fa-external-link-alt me-1"></i> View Site
+        </a>
       </div>
     </div>
 
+    <!-- STATS GRID -->
+    <div class="row g-4 mb-4">
+
+      <div class="col-md-3">
+        <a href="/admin/users" class="admin-card admin-card--users">
+          <div class="admin-card__icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div>
+            <div class="admin-card__count"><%= counts.users %></div>
+            <div class="admin-card__label">Users</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-3">
+        <a href="/admin/posts" class="admin-card admin-card--posts">
+          <div class="admin-card__icon">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div>
+            <div class="admin-card__count"><%= counts.posts %></div>
+            <div class="admin-card__label">Content</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-3">
+        <a href="/admin/posts?type=classified" class="admin-card admin-card--classified">
+          <div class="admin-card__icon">
+            <i class="fas fa-briefcase"></i>
+          </div>
+          <div>
+            <div class="admin-card__count"><%= counts.jobs + counts.market %></div>
+            <div class="admin-card__label">Jobs & Market</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-3">
+        <a href="/admin/notices" class="admin-card admin-card--notices">
+          <div class="admin-card__icon">
+            <i class="fas fa-bullhorn"></i>
+          </div>
+          <div>
+            <div class="admin-card__count"><%= counts.notices || 0 %></div>
+            <div class="admin-card__label">Notices</div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- MANAGEMENT ROW -->
     <div class="row g-4">
 
+      <!-- CONTENT -->
+      <div class="col-md-6">
+        <div class="admin-panel">
+          <div class="admin-panel__title">
+            <i class="fas fa-layer-group me-2 text-success"></i>
+            Content Management
+          </div>
+
+          <form action="/admin/posts" method="GET" class="admin-search">
+            <i class="fas fa-search"></i>
+            <input type="text" name="q" placeholder="Search posts, jobs, market..." />
+            <button type="submit">
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </form>
+
+          <div class="admin-panel__links">
+            <a href="/admin/posts"><i class="fas fa-list"></i> All</a>
+            <a href="/admin/posts?status=draft"><i class="fas fa-pencil-alt"></i> Drafts</a>
+            <a href="/admin/posts?flagged=1"><i class="fas fa-flag"></i> Flagged</a>
+            <a href="/admin/posts?type=job"><i class="fas fa-briefcase"></i> Jobs</a>
+            <a href="/admin/posts?type=market"><i class="fas fa-store"></i> Market</a>
+          </div>
+        </div>
+      </div>
+
       <!-- USERS -->
-      <div class="col-md-3">
-        <a href="/admin/users" class="admin-tile admin-tile--link">
-          <div class="admin-tile__count"><%= counts.users %></div>
-          <div class="admin-tile__label">Users</div>
-        </a>
+      <div class="col-md-6">
+        <div class="admin-panel">
+          <div class="admin-panel__title">
+            <i class="fas fa-user-cog me-2 text-primary"></i>
+            User Management
+          </div>
+
+          <form action="/admin/users" method="GET" class="admin-search">
+            <i class="fas fa-search"></i>
+            <input type="text" name="q" placeholder="Search users or email..." />
+            <button type="submit">
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </form>
+
+          <div class="admin-panel__links">
+            <a href="/admin/users"><i class="fas fa-users"></i> All</a>
+            <a href="/admin/users?role=admin"><i class="fas fa-user-shield"></i> Admins</a>
+            <a href="/admin/users?banned=1"><i class="fas fa-user-slash"></i> Banned</a>
+            <a href="/admin/users?verified=0"><i class="fas fa-user-clock"></i> Unverified</a>
+          </div>
+        </div>
       </div>
 
-      <!-- POSTS -->
-      <div class="col-md-3">
-        <a href="/admin/posts" class="admin-tile admin-tile--link">
-          <div class="admin-tile__count"><%= counts.posts %></div>
-          <div class="admin-tile__label">Articles</div>
-        </a>
-      </div>
-
-      <!-- JOBS -->
-      <div class="col-md-3">
-        <a href="/admin/jobs" class="admin-tile admin-tile--link">
-          <div class="admin-tile__count"><%= counts.jobs %></div>
-          <div class="admin-tile__label">Jobs</div>
-        </a>
-      </div>
-
-      <!-- MARKET -->
-      <div class="col-md-3">
-        <a href="/admin/market" class="admin-tile admin-tile--link">
-          <div class="admin-tile__count"><%= counts.market %></div>
-          <div class="admin-tile__label">Market Items</div>
-        </a>
-      </div>
-
-      <!-- VANGUARD -->
-      <div class="col-12 text-end">
-        <a href="/admin/vanguard" class="admin-btn">
-          <i class="bi bi-shield-lock me-1"></i>
+      <div class="col-12 text-end mt-2">
+        <a href="/admin/vanguard" class="admin-btn admin-btn--danger">
+          <i class="fas fa-shield-virus me-1"></i>
           Vanguard Control
         </a>
       </div>
@@ -57,19 +144,164 @@
   </div>
 </div>
 
-
 <style>
-    .admin-tile--link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    }
+/* ===== ADMIN LAYOUT ===== */
+.admin-title {
+  font-weight: 700;
+}
 
-.admin-tile--link:hover {
+.admin-subtitle {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+/* ===== CARDS ===== */
+.admin-card {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.4rem;
+  border-radius: 1rem;
+  text-decoration: none;
   color: inherit;
-  transform: translateY(-2px);
-    }
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0,0,0,.07);
+  transition: .18s ease;
+}
 
+.admin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(0,0,0,.10);
+}
+
+.admin-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.admin-card--users .admin-card__icon {
+  background: rgba(13,110,253,.1);
+  color: #0d6efd;
+}
+
+.admin-card--posts .admin-card__icon {
+  background: rgba(25,135,84,.12);
+  color: #198754;
+}
+
+.admin-card--classified .admin-card__icon {
+  background: rgba(255,193,7,.18);
+  color: #d39e00;
+}
+
+.admin-card--notices .admin-card__icon {
+  background: rgba(220,53,69,.15);
+  color: #dc3545;
+}
+
+.admin-card__count {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.admin-card__label {
+  font-size: .9rem;
+  color: #6c757d;
+}
+
+/* ===== PANELS ===== */
+.admin-panel {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.4rem 1.6rem;
+  box-shadow: 0 10px 24px rgba(0,0,0,.06);
+}
+
+.admin-panel__title {
+  font-weight: 600;
+  margin-bottom: .9rem;
+  display: flex;
+  align-items: center;
+}
+
+.admin-panel__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-right: .9rem;
+  margin-bottom: .4rem;
+  font-size: .85rem;
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.admin-panel__links a:hover {
+  text-decoration: underline;
+}
+
+/* ===== SEARCH ===== */
+.admin-search {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: #f8f9fa;
+  border-radius: .7rem;
+  padding: .35rem .5rem;
+  margin-bottom: .8rem;
+}
+
+.admin-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  font-size: .85rem;
+}
+
+.admin-search button {
+  border: none;
+  background: #0d6efd;
+  color: #fff;
+  border-radius: .45rem;
+  padding: .25rem .5rem;
+}
+
+/* ===== BUTTONS ===== */
+.admin-btn {
+  border-radius: .7rem;
+  padding: .5rem .9rem;
+  border: 1px solid #dee2e6;
+  text-decoration: none;
+  color: #212529;
+  background: #fff;
+}
+
+.admin-btn--primary {
+  background: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+
+.admin-btn--danger {
+  background: #dc3545;
+  color: #fff;
+  border-color: #dc3545;
+}
+
+.admin-btn--notice {
+  background: #ffc107;
+  color: #212529;
+  border-color: #ffc107;
+}
+
+.admin-btn:hover {
+  opacity: .92;
+}
 </style>
 
 <%- include("../partials/footer") %>

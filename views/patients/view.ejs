@@ -15,7 +15,7 @@
 
     <div>
       <a href="/patients/<%= patient.patient_id %>/edit"
-        class="btn btn-sm btn-light border mb-1">
+        class="btn btn-sm btn-outline-primary border mb-1">
         Edit</a>
 
 
@@ -110,6 +110,17 @@
     </div>
   </div>
 
+
+
+    <!-- CLINICAL NOTES -->
+  <div class="card border-0 shadow-sm p-3">
+    <div class="fw-semibold mb-1">Clinical notes</div>
+    <div class="text-muted">
+      <%= patient.current_health_status || "—" %>
+      <hr>
+       <%= patient.notes || "—" %>
+    </div>
+  </div>
 </div>
 
 

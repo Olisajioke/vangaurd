@@ -1,0 +1,270 @@
+<%- include("../partials/header") %>
+
+<div class="admin-container">
+
+  <div class="admin-header">
+    <h3 class="admin-title">System Notices</h3>
+
+    <a href="/admin/notices/new" class="admin-btn admin-btn--primary">
+      <i class="bi bi-plus-lg"></i>
+      New Notice
+    </a>
+  </div>
+
+  <% if (notices.length === 0) { %>
+    <div class="admin-empty">No notices yet</div>
+  <% } %>
+
+  <% notices.forEach(n => { %>
+
+    <div class="notice-card">
+
+      <div class="notice-main">
+        <div class="notice-title"><%= n.title %></div>
+        <div class="notice-message"><%= n.message %></div>
+
+        <div class="notice-meta">
+          <% if (n.expires_at) { %>
+            Expires: <%= new Date(n.expires_at).toLocaleDateString() %>
+          <% } else { %>
+            No expiry
+          <% } %>
+        </div>
+      </div>
+
+      <div class="notice-actions">
+
+        <a href="/admin/notices/<%= n.id %>/edit"
+           class="admin-btn">
+          Edit
+        </a>
+
+        <button class="admin-btn admin-btn--danger"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteNoticeModal-<%= n.id %>">
+          Delete
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div class="modal fade"
+         id="deleteNoticeModal-<%= n.id %>"
+         tabindex="-1">
+
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content medical-modal">
+
+          <div class="modal-header">
+            <h5 class="modal-title text-danger">
+              Delete Notice
+            </h5>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            Are you sure you want to delete this notice?
+
+            <div class="delete-title">
+              "<%= n.title %>"
+            </div>
+          </div>
+
+          <div class="modal-footer">
+
+            <button class="admin-btn"
+                    data-bs-dismiss="modal">
+              Cancel
+            </button>
+
+            <form action="/admin/notices/<%= n.id %>/delete"
+                  method="POST">
+              <button class="admin-btn admin-btn--danger">
+                Delete
+              </button>
+            </form>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  <% }) %>
+
+</div>
+
+
+<style>
+
+/* ---------- Layout ---------- */
+
+.admin-container {
+  max-width: 920px;
+  margin: 40px auto;
+  padding: 0 10px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.admin-title {
+  font-weight: 600;
+  color: #1e3a5f;
+  letter-spacing: .3px;
+}
+
+.admin-empty {
+  color: #6c7d90;
+  font-size: .9rem;
+}
+
+
+/* ---------- Notice Card ---------- */
+
+.notice-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+
+  background: linear-gradient(180deg,#ffffff 0%,#f7fbff 100%);
+  border: 1px solid #e3eef7;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+
+  box-shadow:
+    0 4px 10px rgba(30,60,90,.06),
+    0 1px 0 rgba(255,255,255,.6) inset;
+
+  transition: all .18s ease;
+}
+
+.notice-card:hover {
+  border-color: #cfe3f3;
+  box-shadow: 0 6px 16px rgba(30,60,90,.1);
+}
+
+.notice-main {
+  flex: 1;
+}
+
+.notice-title {
+  font-weight: 600;
+  color: #1e3a5f;
+  letter-spacing: .2px;
+}
+
+.notice-message {
+  font-size: .92rem;
+  color: #5f6f82;
+  margin-top: 2px;
+}
+
+.notice-meta {
+  margin-top: 6px;
+  font-size: .82rem;
+  color: #6c7d90;
+}
+
+
+/* ---------- Actions ---------- */
+
+.notice-actions {
+  display: flex;
+  gap: 8px;
+}
+
+
+/* ---------- Buttons ---------- */
+
+.admin-btn {
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: .85rem;
+  font-weight: 500;
+  border: 1px solid #d7e3ef;
+  background: #ffffff;
+  color: #2c4a6b;
+  transition: all .15s ease;
+}
+
+.admin-btn:hover {
+  background: #f0f6fc;
+  border-color: #c4d9ec;
+}
+
+.admin-btn--primary {
+  background: linear-gradient(180deg,#2e8fd6,#2476b3);
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(46,143,214,.25);
+}
+
+.admin-btn--primary:hover {
+  background: linear-gradient(180deg,#379ae2,#2c85c8);
+}
+
+.admin-btn--danger {
+  background: linear-gradient(180deg,#f46c6c,#d84a4a);
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(244,108,108,.25);
+}
+
+.admin-btn--danger:hover {
+  background: linear-gradient(180deg,#ff7a7a,#e25a5a);
+}
+
+
+/* ---------- Modal ---------- */
+
+.medical-modal {
+  border-radius: 16px;
+  border: 1px solid #e3eef7;
+  box-shadow: 0 12px 30px rgba(20,40,70,.18);
+  position: relative;
+}
+
+.medical-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(244,108,108,.15) inset;
+  pointer-events: none;
+}
+
+.modal-header {
+  border-bottom: 1px solid #eef4fa;
+}
+
+.modal-body {
+  color: #4a5f75;
+}
+
+.delete-title {
+  margin-top: 10px;
+  font-weight: 600;
+  color: #1e3a5f;
+}
+
+.modal-title.text-danger {
+  color: #d84a4a;
+  font-weight: 600;
+}
+
+</style>
+
+<%- include("../partials/footer") %>

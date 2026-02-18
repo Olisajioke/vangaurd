@@ -59,7 +59,7 @@
   </div>
 <hr>
 <br>
-  <% if (isOwner) { %>
+  <% if (isOwner || isAdmin) { %>
     <div class="text-end mb-4">
       <button class="btn btn-outline-primary btn-sm"
               data-bs-toggle="modal"
@@ -109,7 +109,7 @@
                 <div class="text-muted small">
                   <%= new Date(c.created_at).toLocaleDateString() %>
                 </div>
-               <% if (c.isOwner) { %>
+               <% if (c.isOwner || isAdmin) { %>
                   <button class="btn btn-sm btn-outline-primary"
                           data-bs-toggle="modal"
                           data-bs-target="#editCommentModal-<%= c.id %>">

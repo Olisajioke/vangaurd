@@ -1,0 +1,47 @@
+<%- include("../partials/header") %>
+
+<div class="container py-5" style="max-width:600px;margin:auto;">
+
+  <div class="admin-panel">
+    <div class="admin-panel__title mb-3">Edit Notice</div>
+
+    <form action="/admin/notices/<%= notice.id %>/edit"
+          method="POST">
+
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input name="title"
+               value="<%= notice.title %>"
+               class="form-control"
+               required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Message</label>
+        <textarea name="message"
+                  rows="4"
+                  class="form-control"
+                  required><%= notice.message %></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Duration</label>
+        <select name="duration" class="form-select">
+          <option value="1">1 day</option>
+          <option value="3">3 days</option>
+          <option value="7">7 days</option>
+          <option value="30">30 days</option>
+          <option value="0">Never expire</option>
+        </select>
+      </div>
+
+      <button class="admin-btn admin-btn--primary">
+        Save Changes
+      </button>
+
+    </form>
+  </div>
+
+</div>
+
+<%- include("../partials/footer") %>

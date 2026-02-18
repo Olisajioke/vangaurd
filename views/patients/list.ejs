@@ -70,6 +70,11 @@
                         • <%= p.age %> yrs
                     <% } %>
                 </div>
+                <hr>
+                    <% if (p.phone) { %>
+                        • <%= p.phone %>
+                    <% } %>
+                <hr>
                 <div class="text-muted small">
                     • Systemic Disease: <%= p.systemic_condition?.replaceAll(",", ", ") || "—" %> <br>
                     • Previous Surgeries: <%= p.ocular_surgery?.replaceAll(",", ", ") || "—" %>
@@ -88,11 +93,11 @@
                     class="btn btn-sm btn-outline-success mb-1">
                     Open
                 </a>
-
-                <button class="btn btn-sm btn-light border mb-1"
-                        onclick="openEditModal('<%= p.patient_id %>')">
+                <a href="/patients/<%= p.patient_id %>/edit"
+                    class="btn btn-sm btn-light border mb-1">
                     Edit
-                </button>
+                </a>
+
 
                 <button class="btn btn-sm btn-outline-danger"
                         onclick="openDeleteModal('<%= p.patient_id %>')">
@@ -106,20 +111,6 @@
     </div>
 </div>
 
-
-
-
-
-
-
-<!-- EDIT MODAL -->
-<div class="modal fade" id="editPatientModal">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" id="editPatientContent">
-      <!-- form loads here -->
-    </div>
-  </div>
-</div>
 
 <!-- DELETE MODAL -->
 <div class="modal fade" id="deletePatientModal">

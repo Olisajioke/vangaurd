@@ -1,0 +1,36 @@
+<%- include("../partials/header") %>
+
+<div class="container py-5">
+  <div class="admin-panel" style="max-width:600px;margin:auto;">
+    <div class="admin-panel__title mb-3">Create Notice</div>
+
+    <form action="/admin/notices" method="POST">
+      
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input name="title" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Notice Duration</label>
+        <select name="duration" class="form-select">
+            <option value="1">1 day</option>
+            <option value="3">3 days</option>
+            <option value="7" selected>7 days</option>
+            <option value="30">30 days</option>
+            <option value="0">Never expire</option>
+        </select>
+        </div>
+
+      <div class="mb-3">
+        <label class="form-label">Message</label>
+        <textarea name="message" rows="4" class="form-control" required></textarea>
+      </div>
+
+      <button class="admin-btn admin-btn--primary">
+        Publish Notice
+      </button>
+    </form>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

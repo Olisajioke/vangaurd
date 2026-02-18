@@ -148,21 +148,144 @@
 
       <!-- WELCOME -->
       <div class="card border-0 shadow-sm p-4">
-        <h4 class="fw-semibold mb-2">
-          Welcome back, <%= user.fname %>
+        <h4 class="display-6 fw-bold mb-2">
+          Welcome back, Dr. <%= user.fname %>
         </h4>
 
         <div class="text-muted">
           This is your professional dashboard. Access your patients,
-          content, and activity from the left panel.
+          content, and activity from the left panel or the buttons above.
         </div>
+        <!-- NOTICE BOARD -->
+        <div class="notice-board mt-4">
+          <div class=" text-right display-6 fw-bold notice-board__title">
+            <i class="bi bi-megaphone"></i>
+            Important Notices
+          </div>
+          <% if (activeNotices && activeNotices.length > 0) { %>
+            <% activeNotices.forEach(n => { %>
+              <div class="notice-board__item">
+                <div class="notice-board__item-title">
+                  <%= n.title %>
+                </div>
+                <div class="notice-board__item-text">
+                  <%= n.message %>
+                </div>
+              </div>
+              <% if (user.role === 'admin') { %>
+                <div class="btn notice-board__actions">
+                  <a href="/admin/notices/<%= n.id %>/edit">Edit</a>
+                </div>
+              <% } %>
+            </div>
+            <% }) %>
+
+          <% } else { %>
+
+            <div class="notice-board__empty">
+              No new notices for now
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .notice-board {
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.notice-board__title {
+  font-weight: 600;
+  color: #dc3545;
+  margin-bottom: .6rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.notice-board__actions {
+  margin-top: .3rem;
+}
+
+.notice-board__actions a {
+  font-size: .75rem;
+  color: #842029;
+  text-decoration: underline;
+}
+
+
+.notice-board__item {
+  background: #fff5f5;
+  border: 1px solid #f5c2c7;
+  border-left: 4px solid #dc3545;
+  padding: .7rem .9rem;
+  border-radius: .5rem;
+  margin-bottom: .5rem;
+}
+
+.notice-board__item-title {
+  font-weight: 600;
+  color: #842029;
+  font-size: .92rem;
+}
+
+.notice-board__item-text {
+  color: #842029;
+  font-size: .88rem;
+}
+
+.notice-board__empty {
+  color: #6c757d;
+  font-size: .9rem;
+}
+.notice-modal {
+  border-top: 4px solid #dc3545;
+}
+
+.notice-modal .modal-title {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+</style>
+<% if (popupNotice) { %>
+<div class="modal fade" id="noticeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content notice-modal">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-megaphone"></i>
+          <%= popupNotice.title %>
+        </h5>
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <%= popupNotice.message %>
       </div>
 
     </div>
-
   </div>
-
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = new bootstrap.Modal(
+    document.getElementById("noticeModal")
+  );
+  modal.show();
+});
+</script>
+
+<% } %>
 
 <%- include("partials/editUserModal", { user }) %>
 <%- include("partials/deleteUserModal", { user }) %>
