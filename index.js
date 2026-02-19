@@ -10,6 +10,11 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv"
 import path from "path"
 import crypto from "crypto"
+import resourcesRouter from "./routes/resources.js";
+import { requireLogin } from "./middlewares/auth.js";
+
+
+
 
 
 // 🔎 TEST DB CONNECTION
@@ -45,71 +50,87 @@ function calculateAge(dob) {
 //CONSTANTS
 const app = express();
 const port = 3000;
+
 dotenv.config()
 
 
+// session configuration
 const sessionConfig = {
-  secret: "keyboard cat",
+  secret: process.env.SESSION_SECRET,   // ← move secret to .env
   resave: false,
   saveUninitialized: false,
-  rolling: true, // reset timer on every request
+  rolling: true,
   cookie: {
     httpOnly: true,
-    secure: true, // only over HTTPS
-    maxAge: 1000 * 60 * 20 // 20 minutes
+    secure: false,   // ← dev: false (localhost is not HTTPS)
+    maxAge: 1000 * 60 * 20
   }
-}
-// Session middleware (required for flash)
-app.use(session({
-  secret: 'ExpressSessionMiddleWareKey',  // i have to replace this with a secure key in production
-  resave: false,
-  saveUninitialized: true
-}));
+};
+
+app.use(session(sessionConfig));
+
 
 // Flash middleware
 app.use(session(sessionConfig))
 app.use(flash())
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/uploads")
-  },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + "-" + file.originalname
-    cb(null, unique)
-  }
-})
-const upload = multer({ storage })
 
-// RESTRICT USERS:
-function requireLogin(req, res, next) {
-  if (!req.session.userId) return res.redirect("/login")
-  next()
-}
+// =========================
+// STATIC + PARSING
+// =========================
+app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(methodOverride("_method"));
 
-// Email transponder setup
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.ADMIN_EMAIL,
-      pass: process.env.ADMIN_EMAIL_PASS
-    }
-  });
+// =========================
+// SESSION + FLASH
+// =========================
+app.use(session(sessionConfig));
+app.use(flash());
 
-
-  // notices caller
-  app.use((req, res, next) => {
-  res.locals.activeNotices = [];
-  res.locals.popupNotice = null;
+// expose flash to templates
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
   next();
 });
 
-
-
-// notices middleware
+// =========================
+// GLOBAL USER INFO
+// =========================
 app.use(async (req, res, next) => {
   try {
-    if (req.session.user) {
+    res.locals.userId = req.session?.userId || null;
+    res.locals.userRole = null;
+    res.locals.userName = null;
+
+    if (req.session?.userId) {
+      const [[user]] = await db.query(
+        "SELECT fname, role FROM users WHERE id=?",
+        [req.session.userId]
+      );
+
+      if (user) {
+        res.locals.userRole = user.role;
+        res.locals.userName = user.fname;
+      }
+    }
+
+    next();
+  } catch (err) {
+    console.error("User middleware error:", err);
+    next();
+  }
+});
+
+// =========================
+// NOTICES
+// =========================
+app.use(async (req, res, next) => {
+  try {
+    if (req.session?.userId) {
       const [rows] = await db.query(`
         SELECT *
         FROM notices
@@ -123,117 +144,62 @@ app.use(async (req, res, next) => {
     } else {
       res.locals.popupNotice = null;
     }
-  } catch (e) {
-    res.locals.popupNotice = null;
-  }
-
-  next();
-});
-
-
-
-app.use(async (req, res, next) => {
-  try {
-    const userId = req.session?.userId;
-
-    if (userId) {
-      const [[user]] = await db.query(
-        "SELECT fname, role FROM users WHERE id=?",
-        [userId]
-      );
-
-      res.locals.userName = user?.fname;
-      res.locals.userRole = user?.role;
-    }
 
     next();
-  } catch (err) {
-    console.error("User middleware error:", err);
-    next(); // never block request
+  } catch {
+    res.locals.popupNotice = null;
+    next();
   }
 });
 
-
-
-// ADMIN function
-function requireAdmin(req, res, next) {
-  if (!req.session.userId) return res.redirect("/login")
-
-  db.query("SELECT role FROM users WHERE id=?", [req.session.userId])
-    .then(([rows]) => {
-      if (!rows[0] || rows[0].role !== "admin") {
-        return res.status(403).send("Admins only")
-      }
-      next()
-    })
-    .catch(() => res.sendStatus(500))
-}
-// ckeditor upload
-app.post("/upload-review-image", upload.single("upload"), (req, res) => {
-  const url = "/uploads/" + req.file.filename
-
-  res.json({
-    uploaded: 1,
-    fileName: req.file.filename,
-    url: url
-  })
-})
-
-
+// =========================
+// DB IN TEMPLATES
+// =========================
 app.use((req, res, next) => {
   res.locals.db = db;
   next();
 });
 
-
-// Make flash messages available in templates
-app.use((req, res, next) => {
-  res.locals.success = req.flash("success") || []
-  res.locals.error = req.flash("error") || []
-  next()
-})
-
-
-
-app.use(express.static("public"));
-app.use("/uploads", express.static("uploads"));
-app.use(bodyParser.urlencoded({ extended: true }));
+// =========================
+// VIEW ENGINE
+// =========================
 app.set("view engine", "ejs");
-app.use(methodOverride("_method"))
 
-// GLOBAL USER INFO MIDDLEWARE
-app.use(async (req, res, next) => {
-  try {
-    res.locals.userId = req.session?.userId || null
-    res.locals.userRole = null
-    res.locals.userName = null
-
-    if (req.session?.userId) {
-      const [[user]] = await db.query(
-        "SELECT fname, role FROM users WHERE id=?",
-        [req.session.userId]
-      )
-
-      if (user) {
-        res.locals.userRole = user.role
-        res.locals.userName = user.fname
-      }
-    }
-
-    next()
-  } catch (err) {
-    console.error("locals middleware error:", err)
-    next()
+// =========================
+// MULTER (UPLOADS)
+// =========================
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/uploads");
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + "-" + file.originalname;
+    cb(null, unique);
   }
-})
-
-
-// legacy user info middleware (for non-async routes)
-app.use((req, res, next) => {
-  res.locals.userId = req.session?.userId || null;
-  next();
 });
 
+const upload = multer({ storage });
+
+// ckeditor upload
+app.post("/upload-review-image", upload.single("upload"), (req, res) => {
+  const url = "/uploads/" + req.file.filename;
+
+  res.json({
+    uploaded: 1,
+    fileName: req.file.filename,
+    url
+  });
+});
+
+
+// Email transponder setup
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.ADMIN_EMAIL,
+      pass: process.env.ADMIN_EMAIL_PASS
+    }
+  });
 
 // function to convert empty strings to null for numeric fields
 function normalizePatientData(data) {
@@ -269,7 +235,24 @@ function normalizeMultiSelect(data) {
 }
 
 
+// ADMIN function
+export function requireAdmin(req, res, next) {
+  if (!req.session.userId) return res.redirect("/login")
 
+  db.query("SELECT role FROM users WHERE id=?", [req.session.userId])
+    .then(([rows]) => {
+      if (!rows[0] || rows[0].role !== "admin") {
+        return res.status(403).send("Admins only")
+      }
+      next()
+    })
+    .catch(() => res.sendStatus(500))
+}
+
+// =========================
+// ROUTES
+// =========================
+app.use("/resources", resourcesRouter);
 // HOME ROUTE
 app.get("/", (req, res) => {
   res.render("index")
@@ -332,16 +315,28 @@ app.post("/add_new_user", upload.single("profilepic"), async (req, res) => {
 
 
 // user page
-app.get("/user/:id", requireLogin, (req, res) => {
-  const { id } = req.params
-  const user = user_db.find(u => u.id === id)
+app.get("/user/:id", requireLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  if (!user) return res.status(404).send("User not found")
+    const [[user]] = await db.query(
+      "SELECT id, fname, lname, email, location, profilepic FROM users WHERE id = ?",
+      [id]
+    );
 
-  const savedItems = items.filter(i => user.savedItems?.includes(i.id))
+    if (!user) return res.status(404).send("User not found");
 
-  res.render("user", { user, savedItems })
-})
+    user.fullname = user.fname + " " + user.lname;
+
+    res.render("user", { user });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading user");
+  }
+});
+
+
 
 // user login get form
 app.get("/login", (req, res) => {
@@ -570,6 +565,7 @@ app.get("/profile", requireLogin, async (req, res) => {
 
     // ACTIVE NOTICES
   let activeNotices = [];
+  console.log("PROFILE SESSION:", req.session)
 
   try {
       const [rows] = await db.query(`
@@ -801,7 +797,7 @@ app.get("/view_posts/:id", requireLogin, async (req, res) => {
     WHERE c.post_id=?
     ORDER BY c.created_at ASC
   `, [id]);
-    
+  
   res.render("view_post", {
     post,
     comments,
@@ -1216,11 +1212,13 @@ app.post("/toggle-save/:id", requireLogin, async (req, res) => {
       "DELETE FROM saved_items WHERE user_id=? AND post_id=?",
       [userId, id]
     )
+    req.flash("success", "Item successefully removed from cart!");
   } else {
     await db.query(
       "INSERT INTO saved_items (user_id, post_id) VALUES (?, ?)",
       [userId, id]
     )
+    req.flash("success", "Item successefully added to cart!");
   }
   
   res.redirect("/market")   
@@ -1242,7 +1240,6 @@ app.get("/saved", requireLogin, async (req, res) => {
     WHERE s.user_id = ?
     ORDER BY s.created_at DESC
   `, [userId])
-  req.flash("success", "Item saved successfully")
   res.render("saved", { items })
 })
 
@@ -1885,7 +1882,7 @@ app.post("/admin/notices", requireLogin, requireAdmin, async (req, res) => {
     "INSERT INTO notices (title, message, expires_at) VALUES (?, ?, ?)",
     [title, message, expiresAt]
   );
-
+  req.flash("success", "Notice created successfully!")
   res.redirect("/admin");
 });
 
@@ -1905,7 +1902,6 @@ app.get("/admin/notices/:id/edit", requireLogin, requireAdmin, async (req, res) 
     "SELECT * FROM notices WHERE id = ?",
     [req.params.id]
   );
-
   res.render("admin/edit-notice", { notice: rows[0] });
 });
 
@@ -1923,7 +1919,7 @@ app.post("/admin/notices/:id/edit", requireAdmin, requireLogin, async (req, res)
     "UPDATE notices SET title=?, message=?, expires_at=? WHERE id=?",
     [title, message, expiresAt, req.params.id]
   );
-
+  req.flash("success", "Notice edited successfully!");
   res.redirect("/admin/notices");
 });
 
@@ -1934,7 +1930,7 @@ app.post("/admin/notices/:id/delete", requireLogin, requireAdmin, async (req, re
     "DELETE FROM notices WHERE id=?",
     [req.params.id]
   );
-
+  req.flash("success", "Notice deleted successfully!");
   res.redirect("/admin/notices");
 });
 
@@ -2073,6 +2069,7 @@ app.post("/contact", async (req, res) => {
     res.send("Error sending message, go back and try again.");
   }
 });
+
 
 
 

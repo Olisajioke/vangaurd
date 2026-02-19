@@ -97,7 +97,7 @@
 
           <ul class="dropdown-menu shadow border-0 mt-2 p-2">
             <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources/simple-arabic-phrases" class="btn">
                 <i class="fas fa-language text-primary"></i>
                 Simple Arabic Phrases
               </a>
@@ -110,9 +110,9 @@
             </li>
             <li><hr class="dropdown-divider"></li>
             <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources">
                 <i class="fas fa-scale-balanced text-danger"></i>
-                Professional Ethics
+                 New To Saudi or About to?
               </a>
             </li>
           </ul>
@@ -150,7 +150,7 @@
        role="button"
        data-bs-toggle="dropdown">
       <i class="fa-solid fa-user-circle text-primary"></i>
-      <span class="fw-semibold"> Dr. <%= userName %></span>
+      <span class="fw-semibold">Dr. <%= userName || "" %></span>
     </a>
 
     <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2">
@@ -179,7 +179,8 @@
   </li>
 
   <!-- ADMIN PANEL -->
-    <% if (userRole === 'admin') { %>
+    <% if (userRole && userRole === 'admin') { %>
+
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2"
           href="/admin">

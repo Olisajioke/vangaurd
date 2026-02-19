@@ -77,9 +77,9 @@
               <strong>Dr. <%= c.fname %></strong>
               <span><%= new Date(c.created_at).toLocaleDateString() %></span>
             </div>
-
+            <hr>
             <p class="comment-text"><%= c.content %></p>
-
+            
             <% if (currentUserId === c.user_id || isAdmin) { %>
               <div class="comment-actions">
                 <button

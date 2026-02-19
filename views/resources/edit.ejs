@@ -1,0 +1,220 @@
+<%- include("../partials/header") %>
+
+<section class="resource-edit">
+  <div class="resource-edit-inner">
+
+    <header class="resource-edit-header">
+      <h1 class="resource-edit-title">Edit Resource</h1>
+      <p class="resource-edit-subtitle">
+        Update clinical content and maintain accuracy.
+      </p>
+    </header>
+    <form action="/resources/<%= article.slug %>/edit"
+      method="POST"
+      enctype="multipart/form-data"
+      class="resource-edit-form">
+
+      <!-- Title -->
+      <div class="resource-field">
+        <label class="resource-label">Title</label>
+        <input type="text"
+              name="title"
+              value="<%= article.title %>"
+              required
+              class="resource-input">
+      </div>
+
+      <!-- Subtitle -->
+      <div class="resource-field">
+        <label class="resource-label">Subtitle</label>
+        <input type="text"
+              name="subtitle"
+              value="<%= article.subtitle %>"
+              required
+              class="resource-input">
+      </div>
+
+      <!-- Content -->
+      <div class="resource-field">
+        <label for="content">Edit your story...</label>
+        <textarea id="content"
+                  name="content"
+                  class="resource-textarea form-control"
+                  required><%= article.content %></textarea>
+      </div>
+
+      <!-- Image panel INSIDE form -->
+      <div class="resource-image-panel">
+
+        <% if (article.image) { %>
+          <div class="resource-image-preview">
+            <img src="<%= article.image %>" alt="cover">
+          </div>
+        <% } %>
+
+        <label class="resource-label">Update image (optional)</label>
+        <input type="file" name="image" accept="image/*">
+
+      </div>
+
+      <!-- Actions -->
+      <div class="resource-edit-actions">
+        <button type="submit" class="resource-save-btn">
+          Save Changes
+        </button>
+
+        <a href="/resources/<%= article.slug %>" class="resource-cancel-link">
+          Cancel
+        </a>
+      </div>
+    </form>
+<!-- END image panel -->
+
+
+  </div>
+</section>
+
+<style>
+    
+/**RESOURCES*/
+
+
+
+/* ===== Edit Layout ===== */
+.resource-edit {
+  background: #F7F9FB;
+  padding: 50px 20px 80px;
+}
+
+.resource-edit-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+
+/* ===== Header ===== */
+.resource-edit-header {
+  margin-bottom: 30px;
+}
+
+.resource-edit-title {
+  font-size: 1.8rem;
+  color: #1F2A37;
+  margin-bottom: 6px;
+}
+
+.resource-edit-subtitle {
+  color: #6B7280;
+  font-size: 0.95rem;
+}
+
+
+/* ===== Form ===== */
+.resource-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.resource-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.resource-label {
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+
+/* ===== Inputs ===== */
+.resource-input,
+.resource-textarea {
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: #1F2A37;
+  background: #FFFFFF;
+  transition: border 0.15s ease, box-shadow 0.15s ease;
+}
+
+.resource-input:focus,
+.resource-textarea:focus {
+  outline: none;
+  border-color: #2A6FDB;
+  box-shadow: 0 0 0 3px rgba(42,111,219,0.08);
+}
+
+.resource-textarea {
+  line-height: 1.7;
+  resize: vertical;
+  min-height: 260px;
+}
+
+
+/* ===== Actions ===== */
+.resource-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.resource-save-btn {
+  background: #2A6FDB;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.resource-save-btn:hover {
+  background: #1F5CC4;
+  transform: translateY(-1px);
+}
+
+.resource-cancel-link {
+  color: #6B7280;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.resource-image-panel{
+  margin-top:28px;
+  padding:18px;
+  border:1px solid #E5E7EB;
+  border-radius:12px;
+  background:#fff;
+}
+
+.resource-image-preview{
+  margin-bottom:12px;
+}
+
+.resource-image-preview img{
+  max-width:100%;
+  max-height:220px;
+  object-fit:cover;
+  border-radius:8px;
+  display:block;
+}
+
+.resource-cancel-link:hover {
+  text-decoration: underline;
+}
+
+</style>
+
+<!-- CKEditor -->
+<script src="/ckeditor/ckeditor.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    CKEDITOR.replace("content", { height: 300 });
+  });
+</script>
+
+<%- include("../partials/footer") %>

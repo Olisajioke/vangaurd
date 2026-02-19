@@ -1,114 +1,146 @@
 <%- include("partials/header") %>
 
-<style>
-.profile-hero {
-  background: linear-gradient(135deg, #0d6efd, #6610f2);
-  color: white;
-  padding: 40px 30px;
-  border-radius: 14px;
-  margin-bottom: 30px;
-}
+<section class="public-user">
+  <div class="public-user__container">
 
-.profile-avatar {
-  width: 130px;
-  height: 130px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 4px solid white;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
-}
+    <!-- HERO -->
+    <div class="public-user-hero">
 
-.profile-card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
+      <div class="public-user-hero__bg"></div>
 
-.saved-grid img {
-  height: 160px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-</style>
+      <div class="public-user-hero__content">
+        <% if (user.profilepic) { %>
+          <img src="/uploads/<%= user.profilepic %>" class="public-user-avatar">
+        <% } else { %>
+          <div class="public-user-avatar public-user-avatar--placeholder">👤</div>
+        <% } %>
 
-<div class="container mt-4">
-
-  <!-- HERO -->
-  <div class="profile-hero d-flex align-items-center justify-content-between">
-    <div class="d-flex align-items-center gap-4">
-      <% if (user.profilepic) { %>
-        <img src="/uploads/<%= user.profilepic %>" class="profile-avatar">
-      <% } else { %>
-        <div class="profile-avatar bg-light d-flex align-items-center justify-content-center text-dark">
-          <span class="fs-1">👤</span>
-        </div>
-      <% } %>
-
-      <div>
-        <h2 class="mb-1"><%= user.fullname %></h2>
-        <div class="opacity-75"><%= user.email %></div>
-      </div>
-    </div>
-
-    <div>
-      <button class="btn btn-light me-2"
-              data-bs-toggle="modal"
-              data-bs-target="#editUserModal-<%= user.id %>">
-        Edit Profile
-      </button>
-
-      <button class="btn btn-outline-light"
-              data-bs-toggle="modal"
-              data-bs-target="#deleteUserModal-<%= user.id %>">
-        Delete
-      </button>
-    </div>
-  </div>
-
-  <!-- INFO CARD -->
-  <div class="card profile-card mb-4">
-    <div class="card-body">
-      <h5 class="mb-3">Profile Information</h5>
-      <p><strong>Name:</strong> <%= user.fname %> <%= user.lname %></p>
-      <p><strong>Email:</strong> <%= user.email %></p>
-      <p><strong>Location:</strong><%= user.location %></p>
-      <p><strong>Saved Items:</strong> <%= user.savedItems?.length || 0 %></p>
-    </div>
-  </div>
-
-  <!-- SAVED ITEMS -->
-  <h4 class="mb-3">Saved Items</h4>
-
-  <% if (!savedItems || savedItems.length === 0) { %>
-    <p class="text-muted">No saved items yet.</p>
-  <% } %>
-
-  <div class="row">
-    <% savedItems.forEach(item => { %>
-      <div class="col-md-4 mb-3">
-        <div class="card profile-card">
-          <% if (item.images && item.images.length > 0) { %>
-            <img src="/uploads/<%= item.images[0] %>" class="card-img-top">
-          <% } %>
-          <div class="card-body">
-            <h6><%= item.title %></h6>
-            <div class="text-success">ر.س <%= item.price %></div>
-            <a href="/item/<%= item.id %>" class="btn btn-outline-primary btn-sm mt-2">
-              View
-            </a>
+        <div class="public-user-identity">
+          <h1><%= user.fullname %></h1>
+          <div class="public-user-meta">
+            <span><%= user.location || "Location not specified" %></span>
           </div>
         </div>
       </div>
-    <% }) %>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="public-user-card">
+      <h3>Professional Details</h3>
+
+      <div class="public-user-grid">
+        <div>
+          <label>Full Name</label>
+          <div><%= user.fname %> <%= user.lname %></div>
+        </div>
+
+        <div>
+          <label>Location</label>
+          <div><%= user.location || "—" %></div>
+        </div>
+
+        <div>
+          <label>Email</label>
+          <div><%= user.email %></div>
+        </div>
+      </div>
+    </div>
+
   </div>
-    <button class="btn btn-outline-light"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteUserModal-<%= user.id %>">
-            Delete
-    </button>
+</section>
 
+<style>
+.public-user{
+  background:linear-gradient(#f8fafc,#eef2f7);
+  padding:40px 20px 90px;
+}
 
-</div>
-<%- include("partials/editUserModal", { user }) %>
-<%- include("partials/deleteUserModal", { user }) %>
+.public-user__container{
+  max-width:900px;
+  margin:0 auto;
+}
+
+/* HERO */
+.public-user-hero{
+  position:relative;
+  border-radius:20px;
+  overflow:hidden;
+  margin-bottom:28px;
+  box-shadow:0 10px 28px rgba(15,23,42,.08);
+}
+
+.public-user-hero__bg{
+  height:140px;
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
+}
+
+.public-user-hero__content{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:0 26px 22px;
+  margin-top:-46px;
+}
+
+.public-user-avatar{
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  object-fit:cover;
+  border:5px solid #fff;
+  background:#fff;
+  box-shadow:0 6px 16px rgba(0,0,0,.15);
+}
+
+.public-user-avatar--placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.4rem;
+  color:#64748b;
+}
+
+.public-user-identity h1{
+  margin:0 0 4px;
+  font-size:1.6rem;
+  color:#0f172a;
+  letter-spacing:.2px;
+}
+
+.public-user-meta{
+  font-size:.95rem;
+  color:#475569;
+}
+
+/* CARD */
+.public-user-card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:20px 22px;
+  box-shadow:0 6px 18px rgba(15,23,42,.06);
+}
+
+.public-user-card h3{
+  margin:0 0 14px;
+  font-size:1.05rem;
+  color:#0f172a;
+}
+
+/* GRID */
+.public-user-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px 24px;
+  font-size:.98rem;
+}
+
+.public-user-grid label{
+  font-size:.75rem;
+  color:#64748b;
+  display:block;
+  margin-bottom:2px;
+}
+</style>
+
 <%- include("partials/footer") %>

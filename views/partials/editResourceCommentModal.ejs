@@ -1,0 +1,79 @@
+<!-- EDIT COMMENT MODAL -->
+<div id="editCommentModal" class="comment-modal">
+  <div class="comment-modal-box">
+    <h3>Edit comment</h3>
+
+    <form id="editCommentForm" method="POST">
+      <textarea 
+        id="editCommentTextarea"
+        name="content"
+        class="resource-comment-input"
+        rows="4"
+        required></textarea>
+
+      <div class="comment-modal-actions">
+        <button type="button" class="comment-cancel">Cancel</button>
+        <button type="submit" class="resource-comment-submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+<style>
+  .comment-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.comment-modal-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.comment-modal-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.comment-cancel {
+  background: #E5E7EB;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.comment-delete-btn {
+  background: #DC2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.resource-comment-actions-inline {
+  margin-top: 6px;
+  display: flex;
+  gap: 10px;
+}
+
+.comment-edit-btn {
+  background: none;
+  border: none;
+  color: #2563EB;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+</style>

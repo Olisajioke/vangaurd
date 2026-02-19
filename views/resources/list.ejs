@@ -1,0 +1,306 @@
+<%- include("../partials/header") %>
+
+<%
+  const heroBg = heroImage || "/images/write.jpg";
+%>
+
+<!-- HERO -->
+<section class="resources-hero" style="background-image:url('<%= heroBg %>')">
+  <div class="resources-hero__overlay"></div>
+
+  <div class="resources-hero__content text-center">
+    <h1>Clinical Resources</h1>
+    <p class="text-white-75 fw-semibold">
+      Evidence-based articles and practical guidance for modern practice.
+    </p>
+
+    <% if (userId) { %>
+      <a href="/resources/new" class="resources-hero__cta">
+        <i class="fas fa-plus"></i>
+        Add Resource
+      </a>
+    <% } %>
+  </div>
+</section>
+
+<!-- LIST -->
+<section class="resources-list container">
+
+  <% if (userId) { %>
+    <div class="resources-actions">
+      <a href="/resources/new" class="resources-add-btn">
+        <i class="fas fa-plus"></i>
+        Add Resource
+      </a>
+    </div>
+  <% } %>
+
+  <% if (!articles || articles.length === 0) { %>
+
+    <div class="resource-empty text-center">
+      <p>No clinical resources published yet.</p>
+    </div>
+
+  <% } else { %>
+
+    <div class="resources-grid">
+
+      <% articles.forEach(a => { %>
+
+        <div class="resource-flip">
+          <div class="resource-flip__inner">
+
+            <!-- FRONT -->
+            <div class="resource-flip__front">
+
+              <div class="resource-card-header">
+                <%= a.title %>
+              </div>
+
+              <div
+                class="resource-card-body"
+                style="background-image:url('<%= a.image || "/images/resource-default.jpg" %>')"
+              >
+                <div class="resource-card-meta">
+                  <div class="resource-subtitle">
+                    <%= a.subtitle || "" %>
+                  </div>
+
+                  <div class="resource-date">
+                    Updated
+                    <%= new Date(a.updated_at).toLocaleDateString(undefined,{
+                      year:'numeric',
+                      month:'short',
+                      day:'numeric'
+                    }) %>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- BACK -->
+            <div class="resource-flip__back">
+
+              <div class="resource-back-text">
+                <%= a.content
+                  ? a.content.replace(/<[^>]+>/g,"").substring(0,120) + "..."
+                  : "Clinical resource overview."
+                %>
+              </div>
+
+              <a href="/resources/<%= a.slug %>" class="resource-open-btn">
+                Open Resource →
+              </a>
+
+            </div>
+
+          </div>
+        </div>
+
+      <% }) %>
+
+    </div>
+
+  <% } %>
+
+</section>
+
+<style>
+
+/* HERO */
+.resources-hero{
+  position:relative;
+  height:60vh;
+  min-height:420px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  color:#fff;
+}
+
+.resource-flip__front,
+.resource-flip__back{
+  pointer-events:none;
+}
+
+.resource-flip:hover .resource-flip__back{
+  pointer-events:auto;
+}
+
+.resource-flip:not(:hover) .resource-flip__front{
+  pointer-events:auto;
+}
+
+.resources-hero__overlay{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(15,23,42,.55),rgba(15,23,42,.65));
+  backdrop-filter:blur(2px);
+}
+
+.resources-hero__content{
+  position:relative;
+  max-width:760px;
+  padding:0 20px;
+}
+
+.resources-hero h1{
+  font-size:2.6rem;
+  margin-bottom:12px;
+}
+
+.resources-hero__cta{
+  display:inline-block;
+  margin-top:16px;
+  background:#2563eb;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.95rem;
+  box-shadow:0 6px 18px rgba(37,99,235,.35);
+}
+
+/* LIST */
+.resources-list{
+  padding:60px 20px 80px;
+}
+
+.resources-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:18px;
+}
+
+.resources-add-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#2563eb;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.85rem;
+  box-shadow:0 6px 16px rgba(37,99,235,.25);
+}
+
+/* GRID */
+.resources-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:22px;
+}
+
+/* FLIP CARD */
+.resource-flip{ perspective:1000px; }
+
+.resource-flip__inner{
+  position:relative;
+  width:100%;
+  height:260px;
+  transform-style:preserve-3d;
+  transition:transform .6s;
+}
+
+.resource-flip:hover .resource-flip__inner{
+  transform:rotateY(180deg);
+}
+
+.resource-flip__front,
+.resource-flip__back{
+  position:absolute;
+  inset:0;
+  border-radius:18px;
+  overflow:hidden;
+  backface-visibility:hidden;
+  box-shadow:0 10px 26px rgba(15,23,42,.08);
+}
+
+/* FRONT */
+.resource-flip__front{
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+}
+
+.resource-card-header{
+  padding:14px 16px;
+  font-weight:600;
+  font-size:.95rem;
+  border-bottom:1px solid #e2e8f0;
+  color:#0f172a;
+}
+
+.resource-card-body{
+  flex:1;
+  background-size:cover;
+  background-position:center;
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+}
+
+.resource-card-body::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55));
+}
+
+.resource-card-meta{
+  position:relative;
+  z-index:2;
+  color:#fff;
+  padding:14px 16px;
+  width:100%;
+}
+
+.resource-subtitle{ font-size:.85rem; margin-bottom:4px; }
+.resource-date{ font-size:.75rem; }
+
+/* BACK */
+.resource-flip__back{
+  background:#0f172a;
+  color:#e2e8f0;
+  transform:rotateY(180deg);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.resource-back-text{
+  font-size:.85rem;
+  line-height:1.4;
+}
+
+.resource-open-btn{
+  align-self:flex-end;
+  background:#2563eb;
+  color:#fff;
+  padding:6px 12px;
+  border-radius:8px;
+  text-decoration:none;
+  font-size:.8rem;
+}
+
+/* EMPTY */
+.resource-empty{
+  margin:40px auto;
+  max-width:480px;
+  padding:28px;
+  border-radius:16px;
+  border:1px dashed #cbd5e1;
+  background:#f8fafc;
+  color:#475569;
+}
+
+</style>
+
+<%- include("../partials/footer") %>
