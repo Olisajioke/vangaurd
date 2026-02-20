@@ -50,7 +50,8 @@ function calculateAge(dob) {
 
 //CONSTANTS
 const app = express();
-const port = 3000;
+//const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 dotenv.config()
 
@@ -2334,6 +2335,6 @@ app.post("/contact", async (req, res) => {
 
 
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
