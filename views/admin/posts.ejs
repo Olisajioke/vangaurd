@@ -2,23 +2,25 @@
 
 <div class="admin">
   <div class="container py-4">
-     <div class="admin-header mb-4">
-        <h2 class="admin-title mb-1">
-          <% if (typeof type !== "undefined" && type === "job") { %>Jobs
-          <% } else if (typeof type !== "undefined" && type === "market") { %> Market
-          <% } else { %>All Posts<% } %>
-        </h2>
-        <div class="admin-subtitle">
-          <% if (typeof type !== "undefined" && type === "job") { %>
-            Job listings posted by users
-          <% } else if (typeof type !== "undefined" && type === "market") { %>
-            Marketplace listings posted by users
-          <% } else { %>
-            All content across the platform
-          <% } %>
-        </div>
-      </div>
 
+    <!-- HEADER -->
+    <div class="admin-header mb-4">
+      <h2 class="admin-title mb-1">
+        <% if (typeof type !== "undefined" && type === "job") { %>
+          Jobs
+        <% } else { %>
+          All Posts
+        <% } %>
+      </h2>
+
+      <div class="admin-subtitle">
+        <% if (typeof type !== "undefined" && type === "job") { %>
+          Job listings posted by users
+        <% } else { %>
+          All content across the platform
+        <% } %>
+      </div>
+    </div>
 
     <h3 class="admin__title mb-3">Posts</h3>
 
@@ -32,6 +34,7 @@
       </div>
 
       <% (posts || []).forEach(p => { %>
+
         <div class="admin-table__row">
 
           <div class="col-title">
@@ -45,30 +48,43 @@
           <div class="col-date">
             <%= new Date(p.created_at).toLocaleDateString() %>
           </div>
+
+          <!-- CLEAR FLAG -->
           <form action="/admin/posts/<%= p.id %>/unflag" method="POST">
             <button class="btn btn-sm btn-success">Clear Flag</button>
           </form>
 
-          <form action="/admin/posts/<%= p.id %>/delete" method="POST">
-            <button class="btn btn-sm btn-danger">Delete</button>
-          </form>
-
+          <!-- ACTIONS -->
           <div class="col-actions">
-            <a href="/admin/posts/<%= p.id %>/edit" class="btn-toggle me-2">
+
+            <a href="/admin/posts/<%= p.id %>/edit"
+               class="btn-toggle me-2">
               Edit
             </a>
-             <a href="/view_posts/<%= p.id %>" class="btn-toggle me-2">
-              view 
+
+            <%
+              const viewUrl = (p.type === "job")
+                ? `/jobs/${p.id}`
+                : `/view_posts/${p.id}`;
+            %>
+
+            <a href="<%= viewUrl %>"
+               class="btn-toggle me-2">
+              View
             </a>
-            
+
             <button class="btn-toggle"
                     data-bs-toggle="modal"
                     data-bs-target="#deletePostModal-<%= p.id %>">
-                 Delete
+              Delete
             </button>
+
           </div>
+
         </div>
+
         <%- include("partials/deletePostModal", { post: p }) %>
+
       <% }) %>
 
     </div>
@@ -84,7 +100,6 @@
   overflow: hidden;
 }
 
-/* GRID LAYOUT */
 .admin-table__head,
 .admin-table__row {
   display: grid;
@@ -93,7 +108,6 @@
   padding: 14px 18px;
 }
 
-/* HEADER */
 .admin-table__head {
   background: #f3f6f4;
   font-weight: 600;
@@ -101,7 +115,6 @@
   font-size: 0.85rem;
 }
 
-/* ROW */
 .admin-table__row {
   border-top: 1px solid #eef2f0;
   transition: background 0.15s ease;
@@ -111,7 +124,6 @@
   background: #fafcfb;
 }
 
-/* CELLS */
 .col-title {
   font-weight: 500;
   color: #2f3e36;
@@ -131,14 +143,12 @@
   text-align: right;
 }
 
-/* TITLE WRAP CONTROL */
 .post-title {
   display: inline-block;
   max-width: 100%;
   word-break: break-word;
 }
 
-/* BUTTON */
 .btn-toggle {
   border: 1px solid #d6ded9;
   background: #fff;
@@ -154,4 +164,5 @@
   background: #f3f6f4;
 }
 </style>
+
 <%- include("../partials/footer") %>

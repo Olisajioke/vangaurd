@@ -372,7 +372,7 @@ app.post("/login", async (req, res) => {
   
   if (!match) 
     return res.render("login", { error: "Invalid credentials" })
-
+  
   req.session.userId = user.id;
   req.session.role = user.role;
 
@@ -1708,12 +1708,11 @@ app.post("/admin/users/:id/toggle", requireLogin, requireAdmin, async (req, res)
 
 
 // ADMIN POSTS LIST
-
 app.get("/admin/posts", requireLogin, requireAdmin, async (req, res) => {
   const q = req.query.q || "";
 
   let sql = `
-    SELECT p.id, p.title, p.created_at,
+    SELECT p.id, p.title, p.created_at, p.type,
            u.fname, u.lname
     FROM posts p
     JOIN users u ON p.user_id = u.id
@@ -1734,20 +1733,6 @@ app.get("/admin/posts", requireLogin, requireAdmin, async (req, res) => {
   const [posts] = await db.query(sql, params);
 
   res.render("admin/posts", { posts, q });
-});
-
-
-// SECOND GET FOR ALL POSTS
-app.get("/admin/posts", requireLogin, requireAdmin, async (req, res) => {
-  const [posts] = await db.query(`
-    SELECT p.id, p.title, p.created_at,
-           u.fname, u.lname
-    FROM posts p
-    JOIN users u ON p.user_id = u.id
-    ORDER BY p.created_at DESC
-  `);
-
-  res.render("admin/posts", { posts });
 });
 
 
@@ -1772,50 +1757,136 @@ app.post("/admin/posts/:id/delete", requireLogin, requireAdmin, async (req, res)
 
 
 
+//ADMIN GET POST TO EDIT
+app.get("/admin/posts/:id/edit", requireAdmin, async (req, res) => {
+  const { id } = req.params;
 
-// ADMIN CONTROL: EDIT POST GET
-app.get("/admin/posts/:id/edit", requireLogin, requireAdmin, async (req, res) => {
-  const id = Number(req.params.id);   // ← important
-
-  const [rows] = await db.query(
-    "SELECT id, title, content FROM posts WHERE id = ?",
+  // base post
+  const [[post]] = await db.query(
+    "SELECT * FROM posts WHERE id = ?",
     [id]
   );
 
-  console.log("EDIT ROW:", rows);
+  if (!post) return res.status(404).send("Post not found");
 
-  if (!rows.length) {
-    req.flash("error", "Post not found");
-    return res.redirect("/admin/posts");
+  let extra = null;
+
+  // job extension
+  if (post.type === "job") {
+    const [[job]] = await db.query(
+      "SELECT * FROM jobs WHERE post_id = ?",
+      [id]
+    );
+    extra = job || null;
   }
 
-  res.render("admin/editpost", { post: rows[0] });
+  // clinic review extension
+  if (post.type === "review") {
+    const [[review]] = await db.query(
+      "SELECT * FROM clinic_reviews WHERE post_id = ?",
+      [id]
+    );
+    extra = review || null;
+  }
+
+  res.render("admin/editpost", {
+    post,
+    extra,
+    type: post.type
+  });
 });
-
-
 
 // ADMIN CONTROL: EDIT POST, POST
-app.post("/admin/posts/:id/edit", requireLogin, requireAdmin, async (req, res) => {
-  const id = Number(req.params.id);
+app.post(
+  "/admin/posts/:id/edit",
+  requireAdmin,
+  upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+    { name: "image3", maxCount: 1 }
+  ]),
+  async (req, res) => {
+    const { id } = req.params;
 
-  
-  const { title, content } = req.body;
+    const [[post]] = await db.query(
+      "SELECT * FROM posts WHERE id = ?",
+      [id]
+    );
 
-  await db.query(
-    "UPDATE posts SET title = ?, content = ? WHERE id = ?",
-    [title, content, id]
-  );
- 
+    if (!post) return res.status(404).send("Post not found");
 
-  req.flash("success", "Great job admin, post updated successfully!");
-  res.redirect("/admin/posts");
-});
+    // preserve old images if no new upload
+    const image1 = req.files?.image1
+      ? req.files.image1[0].filename
+      : post.image1;
+
+    const image2 = req.files?.image2
+      ? req.files.image2[0].filename
+      : post.image2;
+
+    const image3 = req.files?.image3
+      ? req.files.image3[0].filename
+      : post.image3;
+
+    // update base post
+    await db.query(
+      `UPDATE posts
+       SET title=?, content=?, location=?, contact=?,
+           image1=?, image2=?, image3=?
+       WHERE id=?`,
+      [
+        req.body.title,
+        req.body.content,
+        req.body.location,
+        req.body.contact,
+        image1,
+        image2,
+        image3,
+        id
+      ]
+    );
+
+    // extension tables
+    if (post.type === "job") {
+      await db.query(
+        `UPDATE jobs
+         SET clinic=?, salary=?, description=?, location=?, contact=?
+         WHERE post_id=?`,
+        [
+          req.body.clinic,
+          req.body.salary,
+          req.body.description,
+          req.body.location,
+          req.body.contact,
+          id
+        ]
+      );
+    }
+
+    if (post.type === "review") {
+      await db.query(
+        `UPDATE clinic_reviews
+         SET clinic_name=?, rating=?, pros=?, cons=?, recommendation=?
+         WHERE post_id=?`,
+        [
+          req.body.clinic_name,
+          req.body.rating,
+          req.body.pros,
+          req.body.cons,
+          req.body.recommendation,
+          id
+        ]
+      );
+    }
+    req.flash("success", "Post edited successfully");
+    res.redirect("/admin/posts");
+  }
+);
 
 
 
 
-
-//ADMIN GET JOB ROUTE
+// ADMIN GET JOBS TO DISPLAY
 app.get("/admin/posts/jobs", requireLogin, requireAdmin, async (req, res) => {
   const q = req.query.q || "";
 
@@ -1897,7 +1968,7 @@ app.get("/admin/users", requireAdmin, async (req, res) => {
   res.render("admin/users", {
     users,
     query: req.query || {},
-    currentAdminId: req.user ? req.user.id : null
+    currentAdminId: req.session.userId
   });
 });
 
