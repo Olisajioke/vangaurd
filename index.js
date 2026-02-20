@@ -12,6 +12,7 @@ import path from "path"
 import crypto from "crypto"
 import resourcesRouter from "./routes/resources.js";
 import { requireLogin } from "./middlewares/auth.js";
+import { requireAdmin } from "./middlewares/adminrequired.js";
 
 
 
@@ -235,19 +236,7 @@ function normalizeMultiSelect(data) {
 }
 
 
-// ADMIN function
-export function requireAdmin(req, res, next) {
-  if (!req.session.userId) return res.redirect("/login")
 
-  db.query("SELECT role FROM users WHERE id=?", [req.session.userId])
-    .then(([rows]) => {
-      if (!rows[0] || rows[0].role !== "admin") {
-        return res.status(403).send("Admins only")
-      }
-      next()
-    })
-    .catch(() => res.sendStatus(500))
-}
 
 // =========================
 // ROUTES
@@ -1060,7 +1049,7 @@ app.get("/item/:id", requireLogin, async (req, res) => {
     SELECT 
       p.id,
       p.title,
-      p.content,
+      p.content AS description,
       p.location,
       p.contact,
       p.image1,
@@ -1648,19 +1637,6 @@ app.get("/admin", requireAdmin, requireLogin, async (req, res) => {
 })
 
 
-// manage users
-app.get("/admin/users", requireLogin, requireAdmin, async (req, res) => {
-  const [users] = await db.query(`
-    SELECT id, fname, lname, email, is_active, role
-    FROM users
-    ORDER BY id DESC
-  `);
-
-  res.render("admin/users", {
-    users,
-    currentAdminId: req.session.userId
-  });
-});
 
 
 
@@ -1732,6 +1708,36 @@ app.post("/admin/users/:id/toggle", requireLogin, requireAdmin, async (req, res)
 
 
 // ADMIN POSTS LIST
+
+app.get("/admin/posts", requireLogin, requireAdmin, async (req, res) => {
+  const q = req.query.q || "";
+
+  let sql = `
+    SELECT p.id, p.title, p.created_at,
+           u.fname, u.lname
+    FROM posts p
+    JOIN users u ON p.user_id = u.id
+  `;
+
+  const params = [];
+
+  if (q) {
+    sql += `
+      WHERE p.title LIKE ?
+         OR p.content LIKE ?
+    `;
+    params.push(`%${q}%`, `%${q}%`);
+  }
+
+  sql += " ORDER BY p.created_at DESC";
+
+  const [posts] = await db.query(sql, params);
+
+  res.render("admin/posts", { posts, q });
+});
+
+
+// SECOND GET FOR ALL POSTS
 app.get("/admin/posts", requireLogin, requireAdmin, async (req, res) => {
   const [posts] = await db.query(`
     SELECT p.id, p.title, p.created_at,
@@ -1805,6 +1811,188 @@ app.post("/admin/posts/:id/edit", requireLogin, requireAdmin, async (req, res) =
   res.redirect("/admin/posts");
 });
 
+
+
+
+
+//ADMIN GET JOB ROUTE
+app.get("/admin/posts/jobs", requireLogin, requireAdmin, async (req, res) => {
+  const q = req.query.q || "";
+
+  let sql = `
+    SELECT p.id, p.title, p.created_at,
+           u.fname, u.lname
+    FROM posts p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.type = 'job'
+  `;
+
+  const params = [];
+
+  if (q) {
+    sql += " AND (p.title LIKE ? OR p.body LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`);
+  }
+
+  sql += " ORDER BY p.created_at DESC";
+
+  const [posts] = await db.query(sql, params);
+
+  res.render("admin/posts", { posts, q, type: "job", query: req.query });
+});
+
+// flag posts
+
+app.post("/posts/:id/flag", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const reason = req.body.reason || null;
+  const userId = req.user.id;
+
+  await db.query(
+    "UPDATE posts SET flagged = 1, flag_reason = ?, flagged_by = ? WHERE id = ?",
+    [reason, userId, id]
+  );
+
+  res.redirect("back");
+});
+
+
+//unflag posts
+app.post("/admin/posts/:id/unflag", requireAdmin, async (req, res) => {
+  await db.query(
+    "UPDATE posts SET flagged = 0, flag_reason = NULL, flagged_by = NULL WHERE id = ?",
+    [req.params.id]
+  );
+  res.redirect("back");
+});
+
+//SEARCH AND RETURN USERS - ADMIN
+app.get("/admin/users", requireAdmin, async (req, res) => {
+  const { role, banned, q } = req.query;
+
+  let sql = `
+    SELECT id, fname, lname, email, role, is_active, created_at
+    FROM users
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (q) {
+    sql += " AND (fname LIKE ? OR lname LIKE ? OR email LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+  }
+
+  if (role === "admin") {
+    sql += " AND role = 'admin'";
+  }
+
+  if (banned === "1") {
+    sql += " AND is_active = 0";
+  }
+
+  sql += " ORDER BY created_at DESC";
+
+  const [users] = await db.query(sql, params);
+
+  res.render("admin/users", {
+    users,
+    query: req.query || {},
+    currentAdminId: req.user ? req.user.id : null
+  });
+});
+
+//GET SINGLE USER
+app.get("/admin/users/:id", requireAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  const [rows] = await db.query(
+    `SELECT id, fname, lname, email, role, is_active, created_at
+     FROM users
+     WHERE id = ?`,
+    [id]
+  );
+
+  if (rows.length === 0) {
+    return res.status(404).send("User not found");
+  }
+
+  const user = rows[0];
+
+  res.render("admin/user-detail", {
+    user,
+    currentAdminId: req.user.id
+  });
+});
+
+
+//get posts
+app.get("/admin/posts", requireAdmin, async (req, res) => {
+  const { flagged, type, status, q } = req.query;
+
+  let sql = `
+    SELECT p.*, u.fname, u.lname
+    FROM posts p
+    JOIN users u ON p.user_id = u.id
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (flagged) {
+    sql += " AND p.flagged = 1";
+  }
+
+  if (type) {
+    sql += " AND p.type = ?";
+    params.push(type);
+  }
+
+  if (status) {
+    sql += " AND p.status = ?";
+    params.push(status);
+  }
+
+  if (q) {
+    sql += " AND (p.title LIKE ? OR p.body LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`);
+  }
+
+  sql += " ORDER BY p.created_at DESC";
+
+  const [posts] = await db.query(sql, params);
+
+  res.render("admin/posts", {
+    posts,
+    q: q || "",
+    type: type || null
+  });
+});
+
+
+//ADMIN GET MARKET ROUTE
+app.get("/admin/posts/market", requireLogin, requireAdmin, async (req, res) => {
+  const q = req.query.q || "";
+
+  let sql = `
+    SELECT p.id, p.title, p.created_at,
+           u.fname, u.lname
+    FROM posts p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.type = 'market'
+  `;
+
+  const params = [];
+
+  if (q) {
+    sql += " AND (p.title LIKE ? OR p.body LIKE ?)";
+    params.push(`%${q}%`, `%${q}%`);
+  }
+
+  sql += " ORDER BY p.created_at DESC";
+
+  const [posts] = await db.query(sql, params);
+
+  res.render("admin/posts", { posts, q, type: "market" });
+});
 
 // ADD VANGUARD CODE:
 app.get("/admin/vanguard", requireLogin, requireAdmin, async (req, res) => {
@@ -1933,6 +2121,8 @@ app.post("/admin/notices/:id/delete", requireLogin, requireAdmin, async (req, re
   req.flash("success", "Notice deleted successfully!");
   res.redirect("/admin/notices");
 });
+
+
 
 // PATIENTS' DATA
 

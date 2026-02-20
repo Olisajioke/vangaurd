@@ -3,6 +3,8 @@ import express from "express";
 import db from "../db.js";
 import multer from "multer";
 import { requireLogin } from "../middlewares/auth.js";
+import { requireAdmin } from "../middlewares/adminrequired.js";
+
 
 const router = express.Router();
 // --- middleware: require login ---
@@ -303,6 +305,7 @@ router.post("/comments/:id/delete", requireLogin, async (req, res) => {
     res.status(500).send("Error deleting comment");
   }
 });
+
 
 
 export default router;

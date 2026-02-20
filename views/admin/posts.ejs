@@ -2,6 +2,23 @@
 
 <div class="admin">
   <div class="container py-4">
+     <div class="admin-header mb-4">
+        <h2 class="admin-title mb-1">
+          <% if (typeof type !== "undefined" && type === "job") { %>Jobs
+          <% } else if (typeof type !== "undefined" && type === "market") { %> Market
+          <% } else { %>All Posts<% } %>
+        </h2>
+        <div class="admin-subtitle">
+          <% if (typeof type !== "undefined" && type === "job") { %>
+            Job listings posted by users
+          <% } else if (typeof type !== "undefined" && type === "market") { %>
+            Marketplace listings posted by users
+          <% } else { %>
+            All content across the platform
+          <% } %>
+        </div>
+      </div>
+
 
     <h3 class="admin__title mb-3">Posts</h3>
 
@@ -28,12 +45,22 @@
           <div class="col-date">
             <%= new Date(p.created_at).toLocaleDateString() %>
           </div>
+          <form action="/admin/posts/<%= p.id %>/unflag" method="POST">
+            <button class="btn btn-sm btn-success">Clear Flag</button>
+          </form>
+
+          <form action="/admin/posts/<%= p.id %>/delete" method="POST">
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </form>
 
           <div class="col-actions">
             <a href="/admin/posts/<%= p.id %>/edit" class="btn-toggle me-2">
               Edit
             </a>
-
+             <a href="/view_posts/<%= p.id %>" class="btn-toggle me-2">
+              view 
+            </a>
+            
             <button class="btn-toggle"
                     data-bs-toggle="modal"
                     data-bs-target="#deletePostModal-<%= p.id %>">

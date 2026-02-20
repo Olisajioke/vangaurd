@@ -38,6 +38,19 @@
     <div class="card-body">
       <%- post.content %>
     </div>
+    <div class="container">
+      <form action="/posts/<%= post.id %>/flag" method="POST">
+          <select name="reason">
+            <option value="spam">Spam</option>
+            <option value="spam">False</option>
+            <option value="spam">Medically Irrelevant</option>
+            <option value="abuse">Abusive</option>
+            <option value="fraud">Fraud</option>
+          </select>
+          <button type="submit">Report</button>
+        </form>
+      </div>
+
 
     <% if (currentUserId === post.user_id || isAdmin) { %>
       <div class="card-footer">

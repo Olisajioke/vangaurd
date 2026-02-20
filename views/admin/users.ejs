@@ -3,7 +3,16 @@
 <div class="admin">
   <div class="container py-4">
 
-    <h3 class="admin__title mb-3">REGISTERED DOCTORS</h3>
+    <h3 class="fw-bold admin__title mb-3">REGISTERED DOCTORS</h3>
+    <p class="fw-semibold">Tap name to view profile</p>
+    <% if (query?.role === "admin") { %>
+      <div class="alert alert-primary">Showing: Admin users</div>
+    <% } %>
+
+    <% if (query?.banned === "1") { %>
+      <div class="alert alert-danger">Showing: Banned users</div>
+    <% } %>
+
 
     <div class="admin-table">
 
@@ -17,13 +26,13 @@
 
       <% (users || []).forEach(u => { %>
         <div class="admin-table__row">
-
           <!-- NAME -->
-          <div>
+        <div>
+          <a href="/user/<%= u.id %>" class="user-link">
             <%= u.fname %> <%= u.lname %>
-          </div>
-
-          <!-- EMAIL -->
+          </a>
+        </div>     
+             <!-- EMAIL -->
           <div>
             <%= u.email %>
           </div>
@@ -51,9 +60,7 @@
 
             <% if (u.id === currentAdminId) { %>
               <span class="admin-lock">You</span>
-
             <% } else { %>
-
               <!-- ROLE TOGGLE -->
               <form method="POST"
                     action="/admin/users/<%= u.id %>/role"
@@ -78,12 +85,12 @@
                     <% if (u.is_active) { %>Disable<% } else { %>Enable<% } %>
                   </button>
                 </form>
+                
               <% } %>
-
+                
             <% } %>
-
+                
           </div>
-
         </div>
       <% }) %>
 
@@ -110,6 +117,9 @@
   color: #1565c0;
 }
 
+.action-btn-wrap {
+  display: inline-flex;
+}
 .admin-lock {
   font-size: 0.75rem;
   color: #7a8a83;
@@ -178,7 +188,16 @@
 .btn-role:hover {
   background: #e9eeec;
 }
+.user-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
 
+.user-link:hover {
+  text-decoration: underline;
+  color: var(--bs-primary);
+}
 /* TOGGLE BUTTON */
 .btn-toggle {
   border: 1px solid #d6ded9;
