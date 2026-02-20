@@ -5,20 +5,9 @@
 
     <!-- HEADER -->
     <div class="admin-header mb-4">
-      <h2 class="admin-title mb-1">
-        <% if (typeof type !== "undefined" && type === "job") { %>
-          Jobs
-        <% } else { %>
-          All Posts
-        <% } %>
-      </h2>
-
+      <h2 class="admin-title mb-1">All Posts</h2>
       <div class="admin-subtitle">
-        <% if (typeof type !== "undefined" && type === "job") { %>
-          Job listings posted by users
-        <% } else { %>
-          All content across the platform
-        <% } %>
+        Posts and job listings created by users
       </div>
     </div>
 
@@ -37,31 +26,31 @@
 
         <div class="admin-table__row">
 
+          <!-- TITLE -->
           <div class="col-title">
             <span class="post-title"><%= p.title %></span>
           </div>
 
+          <!-- AUTHOR -->
           <div class="col-author">
             <%= p.fname %> <%= p.lname %>
           </div>
 
+          <!-- DATE -->
           <div class="col-date">
             <%= new Date(p.created_at).toLocaleDateString() %>
           </div>
 
-          <!-- CLEAR FLAG -->
-          <form action="/admin/posts/<%= p.id %>/unflag" method="POST">
-            <button class="btn btn-sm btn-success">Clear Flag</button>
-          </form>
-
           <!-- ACTIONS -->
           <div class="col-actions">
 
+            <!-- EDIT -->
             <a href="/admin/posts/<%= p.id %>/edit"
                class="btn-toggle me-2">
               Edit
             </a>
 
+            <!-- VIEW -->
             <%
               const viewUrl = (p.type === "job")
                 ? `/jobs/${p.id}`
@@ -73,6 +62,7 @@
               View
             </a>
 
+            <!-- DELETE -->
             <button class="btn-toggle"
                     data-bs-toggle="modal"
                     data-bs-target="#deletePostModal-<%= p.id %>">
