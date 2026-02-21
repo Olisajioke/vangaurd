@@ -13,6 +13,11 @@ import crypto from "crypto"
 import resourcesRouter from "./routes/resources.js";
 import { requireLogin } from "./middlewares/auth.js";
 import { requireAdmin } from "./middlewares/adminrequired.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 
@@ -80,7 +85,9 @@ app.use(flash())
 // =========================
 // STATIC + PARSING
 // =========================
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
+app.set("views", path.join(__dirname, "views"));
+//app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
