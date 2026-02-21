@@ -2333,6 +2333,10 @@ app.post("/contact", async (req, res) => {
 });
 
 
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err)
+  res.status(500).send(err.message || "Server error")
+})
 
 
 app.listen(PORT, () => {
