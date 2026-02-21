@@ -13,7 +13,6 @@ import crypto from "crypto"
 import resourcesRouter from "./routes/resources.js";
 import { requireLogin } from "./middlewares/auth.js";
 import { requireAdmin } from "./middlewares/adminrequired.js";
-import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
