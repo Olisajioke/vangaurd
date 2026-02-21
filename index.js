@@ -7,7 +7,7 @@ import methodOverride from "method-override"
 import bcrypt from "bcrypt";
 import db from "./db.js"
 import nodemailer from "nodemailer";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import path from "path"
 import crypto from "crypto"
 import resourcesRouter from "./routes/resources.js";
@@ -53,7 +53,7 @@ const app = express();
 //const port = 3000;
 const PORT = process.env.PORT || 3000;
 
-dotenv.config()
+dotenv.config();
 
 
 // session configuration
