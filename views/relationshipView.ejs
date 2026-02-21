@@ -101,15 +101,8 @@
 
 </div>
 
-<% if (isOwner) { %>
-
-  <!-- EDIT MODAL -->
-
+<% if (isOwner || isAdmin) { %>
   <%- include("partials/editRelationshipModal") %>
-
-
-  <!-- DELETE MODAL -->
-
   <%- include("partials/deleteRelationshipModal") %>
 <% } %>
 <style>

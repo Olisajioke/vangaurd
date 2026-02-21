@@ -52,7 +52,6 @@
 
             <!-- FRONT -->
             <div class="resource-flip__front">
-
               <div class="resource-card-header">
                 <%= a.title %>
               </div>
@@ -76,12 +75,10 @@
                   </div>
                 </div>
               </div>
-
             </div>
 
             <!-- BACK -->
             <div class="resource-flip__back">
-
               <div class="resource-back-text">
                 <%= a.content
                   ? a.content.replace(/<[^>]+>/g,"").substring(0,120) + "..."
@@ -92,7 +89,6 @@
               <a href="/resources/<%= a.slug %>" class="resource-open-btn">
                 Open Resource →
               </a>
-
             </div>
 
           </div>
@@ -121,19 +117,6 @@
   background-size:cover;
   background-repeat:no-repeat;
   color:#fff;
-}
-
-.resource-flip__front,
-.resource-flip__back{
-  pointer-events:none;
-}
-
-.resource-flip:hover .resource-flip__back{
-  pointer-events:auto;
-}
-
-.resource-flip:not(:hover) .resource-flip__front{
-  pointer-events:auto;
 }
 
 .resources-hero__overlay{
@@ -198,7 +181,9 @@
 }
 
 /* FLIP CARD */
-.resource-flip{ perspective:1000px; }
+.resource-flip{
+  perspective:1000px;
+}
 
 .resource-flip__inner{
   position:relative;
@@ -206,6 +191,7 @@
   height:260px;
   transform-style:preserve-3d;
   transition:transform .6s;
+  will-change:transform;
 }
 
 .resource-flip:hover .resource-flip__inner{
@@ -219,6 +205,8 @@
   border-radius:18px;
   overflow:hidden;
   backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform-style:preserve-3d;
   box-shadow:0 10px 26px rgba(15,23,42,.08);
 }
 
@@ -227,6 +215,7 @@
   background:#fff;
   display:flex;
   flex-direction:column;
+  transform:rotateY(0deg) translateZ(1px);
 }
 
 .resource-card-header{
@@ -268,7 +257,7 @@
 .resource-flip__back{
   background:#0f172a;
   color:#e2e8f0;
-  transform:rotateY(180deg);
+  transform:rotateY(180deg) translateZ(1px);
   padding:18px;
   display:flex;
   flex-direction:column;

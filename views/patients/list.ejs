@@ -71,10 +71,6 @@
                     <% } %>
                 </div>
                 <hr>
-                    <% if (p.phone) { %>
-                        • <%= p.phone %>
-                    <% } %>
-                <hr>
                 <div class="text-muted small">
                     • Systemic Disease: <%= p.systemic_condition?.replaceAll(",", ", ") || "—" %> <br>
                     • Previous Surgeries: <%= p.ocular_surgery?.replaceAll(",", ", ") || "—" %>

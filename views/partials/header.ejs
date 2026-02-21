@@ -21,6 +21,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
   <div class="container-fluid px-5">
+
     <!-- BRAND -->
     <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/">
       <svg xmlns="http://www.w3.org/2000/svg"
@@ -49,6 +50,39 @@
 
       <!-- LEFT NAV -->
       <ul class="navbar-nav ms-lg-3 mb-2 mb-lg-0">
+
+        <!-- RESOURCES -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+             href="#"
+             role="button"
+             data-bs-toggle="dropdown">
+            <i class="fas fa-layer-group"></i>
+            Resources
+          </a>
+
+          <ul class="dropdown-menu shadow border-0 mt-2 p-2">
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources/simple-arabic-phrases">
+                <i class="fas fa-language text-primary"></i>
+                Simple Arabic Phrases
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources/learn-prayer-times">
+                <i class="fas fa-mosque text-primary"></i>
+                Learn Prayer Times
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources">
+                <i class="fas fa-scale-balanced text-danger"></i>
+                New To Saudi or About to?
+              </a>
+            </li>
+          </ul>
+        </li>
 
         <!-- PROFESSIONAL -->
         <li class="nav-item dropdown">
@@ -85,40 +119,6 @@
           </ul>
         </li>
 
-        <!-- RESOURCES -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-             href="#"
-             role="button"
-             data-bs-toggle="dropdown">
-            <i class="fas fa-layer-group"></i>
-            Resources
-          </a>
-
-          <ul class="dropdown-menu shadow border-0 mt-2 p-2">
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources/simple-arabic-phrases" class="btn">
-                <i class="fas fa-language text-primary"></i>
-                Simple Arabic Phrases
-              </a>
-            </li>
-            <li>
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="/resources/learn-prayer-times">
-                  <i class="fas fa-mosque text-primary"></i>
-                  Learn Prayer Times
-                </a>
-              </li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="/resources">
-                <i class="fas fa-scale-balanced text-danger"></i>
-                 New To Saudi or About to?
-              </a>
-            </li>
-          </ul>
-        </li>
-
         <!-- MARKET -->
         <li class="nav-item">
           <a class="nav-link d-flex align-items-center gap-2"
@@ -128,10 +128,10 @@
           </a>
         </li>
 
-          <!-- RELATIONSHIPS -->
+        <!-- RELATIONSHIPS -->
         <li class="nav-item">
           <a class="nav-link d-flex align-items-center gap-2"
-            href="<%= userId ? '/relationships' : '/login' %>">
+             href="<%= userId ? '/relationships' : '/login' %>">
             <i class="fa-solid fa-users text-info"></i>
             Community
           </a>
@@ -139,74 +139,73 @@
 
       </ul>
 
-        <!-- RIGHT NAV -->
-<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+      <!-- RIGHT NAV -->
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
-  <% if (userId) { %>
+        <% if (userId) { %>
 
-  <!-- USER DROPDOWN -->
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-       href="#"
-       role="button"
-       data-bs-toggle="dropdown">
-      <i class="fa-solid fa-user-circle text-primary"></i>
-      <span class="fw-semibold">Dr. <%= userName || "" %></span>
-    </a>
+        <!-- USER DROPDOWN -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+             href="#"
+             role="button"
+             data-bs-toggle="dropdown">
+            <i class="fa-solid fa-user-circle text-primary"></i>
+            <span class="fw-semibold">Dr. <%= userName || "" %></span>
+          </a>
 
-    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2">
-      <li>
-        <a class="dropdown-item d-flex align-items-center gap-2" href="/profile">
-          <i class="fa-solid fa-user"></i>
-          My Profile
-        </a>
-      </li>
-      <li>
-        <a class="dropdown-item d-flex align-items-center gap-2" href="/saved">
-          <i class="fa-solid fa-heart text-danger"></i>
-          Saved Items
-        </a>
-      </li>
-      <li><hr class="dropdown-divider"></li>
-      <li>
-        <form action="/logout" method="POST">
-          <button class="dropdown-item d-flex align-items-center gap-2 text-danger">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Logout
-          </button>
-        </form>
-      </li>
-    </ul>
-  </li>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2">
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/profile">
+                <i class="fa-solid fa-user"></i>
+                My Profile
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/saved">
+                <i class="fa-solid fa-heart text-danger"></i>
+                Saved Items
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form action="/logout" method="POST">
+                <button class="dropdown-item d-flex align-items-center gap-2 text-danger">
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                  Logout
+                </button>
+              </form>
+            </li>
+          </ul>
+        </li>
 
-  <!-- ADMIN PANEL -->
-    <% if (userRole && userRole === 'admin') { %>
+        <!-- ADMIN PANEL -->
+        <% if (userRole && userRole === 'admin') { %>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2" href="/admin">
+            <i class="fa-solid fa-shield-halved text-warning"></i>
+            Admin Panel
+          </a>
+        </li>
+        <% } %>
 
-      <li class="nav-item">
-        <a class="nav-link d-flex align-items-center gap-2"
-          href="/admin">
-          <i class="fa-solid fa-shield-halved text-warning"></i>
-          Admin Panel
-        </a>
-      </li>
-    <% } %>
+        <% } else { %>
 
-    <% } else { %>
+        <!-- LOGIN -->
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-2" href="/login">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            Login
+          </a>
+        </li>
 
-      <!-- LOGIN -->
-      <li class="nav-item">
-        <a class="nav-link d-flex align-items-center gap-2"
-          href="/login">
-          <i class="fa-solid fa-right-to-bracket"></i>
-          Login
-        </a>
-      </li>
+        <% } %>
 
-    <% } %>
-
-    </ul>
+      </ul>
+    </div>
   </div>
 </nav>
+
 <% if (success && success.length > 0) { %>
   <div class="container mt-3">
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -225,7 +224,4 @@
   </div>
 <% } %>
 
-
-
 <main>
-

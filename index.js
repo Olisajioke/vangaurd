@@ -202,12 +202,14 @@ app.post("/upload-review-image", upload.single("upload"), (req, res) => {
 
 // Email transponder setup
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.ADMIN_EMAIL,
-      pass: process.env.ADMIN_EMAIL_PASS
-    }
-  });
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // important for 587
+  auth: {
+    user: process.env.ADMIN_EMAIL,
+    pass: process.env.ADMIN_EMAIL_PASS
+  }
+});
 
 // function to convert empty strings to null for numeric fields
 function normalizePatientData(data) {
@@ -1088,7 +1090,7 @@ app.get("/item/:id", requireLogin, async (req, res) => {
   const isSaved = savedRows.length > 0;
   const isAdmin = req.session.role === "admin";
   const currentUserId = req.sessionID;
-
+  //console.log(item.description);
   res.render("item", { item, isSaved, isAdmin, currentUserId })
 })
 
@@ -1383,7 +1385,7 @@ app.post(
       [id]
     )
 
-    if (!post || post.user_id !== req.session.userId) {
+    if (!post || (post.user_id !== req.session.userId && req.session.role !== "admin")) {
       return res.redirect("/relationships/" + id)
     }
 
@@ -2093,37 +2095,29 @@ app.get("/admin/vanguard", requireLogin, requireAdmin, async (req, res) => {
 // UPDATE VANGUARD CODE
 app.post("/admin/vanguard/update", requireLogin, requireAdmin, async (req, res) => {
   try {
-    const { vanguard_code } = req.body
+    const { vanguard_code } = req.body;
 
-    // update DB first
+    // update DB
     await db.query(
       "UPDATE site_settings SET vanguard_code=? WHERE id=1",
       [vanguard_code]
-    )
+    );
 
-    // send notification email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.ADMIN_EMAIL,
-        pass: process.env.ADMIN_EMAIL_PASS
-      }
-    })
-
+    // send email using global transporter
     await transporter.sendMail({
-      from: `"Vanguard Security" <${process.env.ADMIN_EMAIL}>`,
       to: process.env.ADMIN_EMAIL,
-      subject: "Vanguard Code Rotated",
-      text: `The Vanguard access code has been updated.\n\nNew Code: ${vanguard_code}\n\nTime: ${new Date().toISOString()}`
-    })
-    req.flash("success", "Vanguard code changed successfully!");
-    res.redirect("/admin/vanguard")
+      subject: "Vanguard Code Updated",
+      text: `New Vanguard code: ${vanguard_code}`
+    });
 
+    req.flash("success", "Vanguard code changed successfully!");
+
+    res.redirect("/admin/settings");
   } catch (err) {
-    console.error(err)
-    res.send("Failed to update Vanguard code")
+    console.error(err);
+    res.status(500).send("Error updating Vanguard code");
   }
-})
+});
 
 //ADMIN NOTICES
 
