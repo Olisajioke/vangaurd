@@ -1,10 +1,23 @@
-import dotenv from "dotenv";
+import dotenv from "dotenv"
 import mysql from "mysql2/promise"
 
-dotenv.config();
-const db = mysql.createPool(process.env.DATABASE_URL);
+dotenv.config()
 
-export default db;
+const db = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+
+  connectTimeout: 10000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
+})
+
+export default db
+
+
 /** 
 const db = mysql.createPool({
   host: process.env.DB_HOST,

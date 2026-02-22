@@ -35,6 +35,13 @@ async function testDB() {
 testDB()
 
 
+setInterval(async () => {
+  try {
+    await db.query("SELECT 1")
+  } catch {}
+}, 300000)
+
+
 
 // HELPER FUNCTION TO CALCULATE AGE
 function calculateAge(dob) {
@@ -115,24 +122,30 @@ app.use(async (req, res, next) => {
     res.locals.userName = null;
 
     if (req.session?.userId) {
-      const [[user]] = await db.query(
-        "SELECT fname, role FROM users WHERE id=?",
-        [req.session.userId]
-      );
 
-      if (user) {
-        res.locals.userRole = user.role;
-        res.locals.userName = user.fname;
+      // ✅ use cached user if available
+      if (!req.session.user) {
+        const [[user]] = await db.query(
+          "SELECT fname, role FROM users WHERE id=?",
+          [req.session.userId]
+        );
+
+        req.session.user = user || null;
+      }
+
+      if (req.session.user) {
+        res.locals.userRole = req.session.user.role;
+        res.locals.userName = req.session.user.fname;
       }
     }
 
     next();
+
   } catch (err) {
     console.error("User middleware error:", err);
     next();
   }
 });
-
 // =========================
 // NOTICES
 // =========================
